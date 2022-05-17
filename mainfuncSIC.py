@@ -312,47 +312,44 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
         # print(i,edge_list,E_i)
         ga.crossAndMutation(mutation_pos)
         m_list.extend(ga.s)
-        # print("m_list:",m_list)
-        m_list_true = []  # 记录m_list中可行的卸载决策
+        #print("m_list:",m_list)
+        m_list_true = []  # 记录保底可行解 + m_list中可行的卸载决策
 
+        #todo 此行以上的代码还未复查
 
         # 生成一组保底可行解
         feasible_decision = getfeasibleres(edge_list, upload, recordD_i, recordg_i, recordf_i, E_min_rec, C_local_rec,
                                            C_up_rec,
                                            E_i_record, wireless_devices, server, alpha, N_0, beta, T)
-        # feasible_decision = getfeasibleres(edge_list, upload, recordD_i, recordg_i, recordf_i, E_min_rec, C_local_rec, C_up_rec,
-        #         E_i, wireless_devices, server, alpha, N_0, beta, T)
         # print("原始生成的保底可行解:", feasible_decision)
 
         # 先补全这个保底的可行解
         for index in local_list:
             feasible_decision = np.insert(feasible_decision, index, 0)
-
-            # feasible_decision[index] = 0
-        #print("补全后的保底可行解:",feasible_decision)
+        print("补全后的保底可行解:",feasible_decision)
         m_list_true.append(feasible_decision)
 
         # * 计算最大奖励
         r_list = []   #记录时延---保底可行解和满足可行性分析的解
-        #all_lantency_list = []  #记录时延---保底可行解和满足可行性分析的解
         # 计算保底可行解的时延
         feasible_lantency = 0
         for id in range(len(feasible_decision)):
             feasible_lantency += feasible_decision[id] * uploadrecord_ori[id] + (1 - feasible_decision[id]) * (
                     D_i[id] * g_i[id] / f_i[id])
-        #all_lantency_list.append(feasible_lantency)
         r_list.append(feasible_lantency)
         #print("保底时延：",feasible_lantency)
 
-        #print("D,", D_i)
-        #print("精简掉的设备的时延：", localsimple)
+        #先补全每个决策变量 m
+        for m in m_list:
+            for index in local_list:
+                m = np.insert(m, index, 0)
+            #print("补全后的m：",m)
 
-        # *对上传的设备进行分组    *todo   m中设备的下标改变了，不是原来10个设备的下标了
+        # *对补全后的设备进行分组    *todo   需要再检查一下， 两个for循环，是用 for in range(len(list)) 还是直接 for in range list
         def split_group_lantency(m):
-
             up_devices = []
             local_lantency = 0
-            for i in range(m):
+            for i in range(len(m)):    #先对所有设备进行筛选，m[i]=0的直接计算本地时延之和，m[i]=1的运用sic进行分组
                 if m[i] == 1:
                     up_devices.append(wireless_devices[i])
                 else:
@@ -360,82 +357,55 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
             split_list = sic(devices_all=up_devices, server=server, alpha=alpha, N0=N_0, beta=beta)
 
             up_lantency = 0
-            for lst in split_list:
-                up_time = 0
-                for id in lst:
+            for lst in split_list:    #[[1,2,3],[4,6],[7]]
+                up_time = 0    #每个分组中最大的上传时延
+                for id in lst:      #[1,2,3]
                     up_time_temp = dataUpload(B, P[id], h0[id], N_0, D_i_list[id])
                     up_time = max(up_time, up_time_temp)
-                up_lantency += up_time
+                up_lantency += up_time    #所有的组的最大的上传时延之和
 
             return up_lantency,local_lantency
 
-
-        #m_listfull_lantency = []  # (不包含保底解的)存每个 可行解，补全后 设备的 总时延
         # * 可行性分析
         for m in m_list:
-
-            single_lantency, maxPar_lantency, up_local_lantency = split_group_lantency(m)
-            time_limit = sum(maxPar_lantency) + single_lantency
+            up_lantency,local_lantency= split_group_lantency(m)
 
             # 各决策变量的总时延
-            m_lantency = time_limit + up_local_lantency + localsimple
-
-            # 补全每个决策变量 m
-            for index in local_list:
-                # m[index] = 0
-                m = np.insert(m, index, 0)
-
+            m_lantency = up_lantency + local_lantency
 
             # 时延约束 和 能量约束 判断
-            if time_limit <= T:
+            if up_lantency <= T:
                 # 能量约束判断
                 for i in range(len(m)):
                     energy_limit = E_i[i] - ((1 - m[i]) * C_local_ori[i] + m[i] * C_up_ori[i])
                     if energy_limit < E_min[i]:
                         break
                 else:
-                    m_list_true.append(m)
-                        #m_listfull_lantency.append(m_lantency)
-                        #ll_lantency_list.append(m_lantency)
+                    m_list_true.append(m.tolist())
                     r_list.append(m_lantency)
-        # print("可行解有：", m_list_true)
-        #print("当前时间帧内，各可行解的总时延：",all_lantency_list)
+        print("可行解有：", m_list_true)
 
-
-        ##!!!m_list_true比total_simplelantency多一个元素：保底的那个
-
-        '''
-        # 计算其他可行解的时延
-        for i in range(len(m_listfull_lantency)):
-            r = m_listfull_lantency[i]
-            r_list.append(r)
-        # print("各个可行解的奖励：", r_list)
-        '''
-        final_m = m_list_true[np.argmin(r_list)]  # 从可行决策变量中选取时延最小的
+        final_m = m_list_true[np.argmin(r_list)]  # 从可行决策变量中选取时延最小的决策
         #totallantency_singleframe = all_lantency_list[np.argmax(r_list)]
         totallantency_singleframe = min(r_list)
         # print("第",current_lot,"个时间帧内最优总时延：",totallantency_singleframe)
 
         optimal_m = final_m  # 当前时间帧的最优解是optimal_m！！！
         print("第",current_lot,"个时间帧,最优的可行解是：", optimal_m)
-        # 未精简部分该时间帧是否执行完的更新
 
         # 3000个时间帧的总时延
         totallantency_final += totallantency_singleframe
 
-
         # 将最优解中去除原来要精简掉的
         final_m = np.delete(final_m, local_list)
 
-        # w = analysemiu(final_m, upload, T)
-
+        # 未精简部分该时间帧是否执行完的更新
         for id in range(len(final_m)):
             if upload[id] != 0 and D_i_list[id] != 0:
                 flagWD[edge_list[id]] = (final_m[id] * upload[id]) + (1 - final_m[id]) * (
                             recordD_i[id] * recordg_i[id] / recordf_i[id])
             # 加上精简之后的时延
             #totallantency_final += final_m[id] * upload[id] + (1 - final_m[id]) * ( recordD_i[id] * g_i[id] / f_i[id])
-
 
         # 各设备进行能量更新
         for index in range(N):
@@ -452,7 +422,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
         # the main code for DROO training ends here
 
         # the following codes store some interested metrics for illustrations
-        # memorize the largest reward  1./
+        # memorize the largest reward
         rate_his.append(np.min(r_list))
         rate_his_ratio.append(rate_his[-1] / rate[i_idx][0])
 
@@ -466,6 +436,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
     total_time = time.time() - start_time
     #mem.plot_cost()
     #plot_rate(rate_his_ratio)
+
     # print(N, '个 WDs', "算法停止的时间帧(0-2999):", stop_time)
     # print("本轮（3000个时间帧），最优总时延是,", totallantency_final)
     # print("本轮（3000个时间帧）为止，单个时间帧最优总时延平均值是,", totallantency_final/stop_time)
