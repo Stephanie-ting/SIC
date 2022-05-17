@@ -115,7 +115,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
 
     flagWD = [0 for fl in range(N)]  # 记录无线设备完成任务所需的时间帧数，即时延
     # print('#user = %d, #channel=%d, K=%d, decoder = %s, Memory = %d, Delta = %d' % (N, n, K, decoder_mode, Memory, Delta))
-    # Load data
+    # Load data    *todo
     if N in [5, 6, 7, 8, 9, 10, 20, 30]:
         channel0 = sio.loadmat('./data/data_%d' % N)['input_h']
         rate = sio.loadmat('./data/data_%d' % N)[
@@ -262,7 +262,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
                 stop_time = i
                 stop_time = min(stop_time, i)   # 算法在第 i 个时间帧停止
                 E_flag = True
-                break;
+                break
                 # pass
                 # print(i)
 
@@ -347,56 +347,28 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
         #print("D,", D_i)
         #print("精简掉的设备的时延：", localsimple)
 
-        # *对上传的设备进行分组
+        # *对上传的设备进行分组    *todo   m中设备的下标改变了，不是原来10个设备的下标了
         def split_group_lantency(m):
-            current_up = []  # 存的下标
-            current_local = []  # 存的下标
-            current_single = []  # 存的下标
-            current_par = []  # 存的下标
-            maxPar_lantency = []  # 存放每一组中时延最大的设备的所需时延  是时延
 
-            # print("len(m)",len(m))
-            # 将一一组卸载决策 m中的本地执行和边缘执行的设备分开
-            for index in range(len(m)):
-                if m[index] == 1:
-                    current_up.append(index)
-                else:
-                    current_local.append(index)
-
-            # 从wireless_devices中取current_up中对应下标的设备
             up_devices = []
-            for index in current_up:
-                up_devices.append(wireless_devices[index])
+            local_lantency = 0
+            for i in range(m):
+                if m[i] == 1:
+                    up_devices.append(wireless_devices[i])
+                else:
+                    local_lantency+= D_i[i] * g_i[i] / f_i[i]
             split_list = sic(devices_all=up_devices, server=server, alpha=alpha, N0=N_0, beta=beta)
 
-            # print("当前m的分组情况是：", split_list)
-            # 分组情况是： [[9, 7, 6, 1, 8, 0], [4, 3, 2], [5]]
-            # current_single[] and current_par
+            up_lantency = 0
+            for lst in split_list:
+                up_time = 0
+                for id in lst:
+                    up_time_temp = dataUpload(B, P[id], h0[id], N_0, D_i_list[id])
+                    up_time = max(up_time, up_time_temp)
+                up_lantency += up_time
 
-            for list in split_list:
-                if len(list) != 1:
-                    current_par.append(list)  # [[9, 7, 6, 1, 8, 0], [4, 3, 2]]
-                else:
-                    current_single.append(list)
+            return up_lantency,local_lantency
 
-            for par in current_par:  # par = [9, 7, 6, 1, 8, 0]
-                par_lantency = []  # 存放每组设备上传时延
-                for device in par:
-                    par_lantency.append(dataUpload(B, P[device], h0[device], N_0, D_i_list[device]))
-                maxPar_lantency.append(max(par_lantency))
-
-            # 不能并行上传的设备的总时延   current_single = [[5]]
-            single_lantency = 0
-            for single_list in current_single:  # [5]
-                for device in single_list:
-                    single_lantency += dataUpload(B, P[device], h0[device], N_0, D_i_list[device])
-
-            # 精简后仍本地执行的设备的总时延
-            up_local_lantency = 0
-
-            for device in current_local:
-                up_local_lantency += recordD_i[device] * recordg_i[device] / recordf_i[device]
-            return single_lantency, maxPar_lantency, up_local_lantency
 
         #m_listfull_lantency = []  # (不包含保底解的)存每个 可行解，补全后 设备的 总时延
         # * 可行性分析
@@ -452,7 +424,6 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
         totallantency_final += totallantency_singleframe
 
 
-
         # 将最优解中去除原来要精简掉的
         final_m = np.delete(final_m, local_list)
 
@@ -481,11 +452,12 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
         # the main code for DROO training ends here
 
         # the following codes store some interested metrics for illustrations
-        # memorize the largest reward
-        rate_his.append(np.max(r_list))
+        # memorize the largest reward  1./
+        rate_his.append(np.min(r_list))
         rate_his_ratio.append(rate_his[-1] / rate[i_idx][0])
+
         # record the index of largest reward
-        k_idx_his.append(np.argmax(r_list))
+        k_idx_his.append(np.argmin(r_list))
         # record K in case of adaptive K
         K_his.append(K)
         # mode_his.append(m_list[np.argmax(r_list)])
