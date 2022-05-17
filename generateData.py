@@ -1,7 +1,7 @@
 # coding=utf8
 import scipy.io as sio
 import numpy as np
-print("hello wolrd!")
+
 # 导入数据
 for N in range(10, 32, 2):
     n = 3000
