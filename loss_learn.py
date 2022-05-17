@@ -1,5 +1,5 @@
 # coding=utf8
-import numpy as np
+
 import scipy.io as sio
 from mainfuncSIC_learn import EAOO_latest
 
