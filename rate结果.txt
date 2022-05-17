@@ -1,0 +1,122 @@
+The algorithm EAOOSIC with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm EAOO with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm DROO with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm Local with 10 WDs begin.
+
+20
+
+f_i， [47.36598427882786, 127.29607822622661, 124.77610991789282, 163.3896408171897, 102.89918281850184, 180.43387538840693, 71.88844719854218, 24.578931093564925, 136.394508929643, 156.52969479433378]
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm EAOOSIC with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm EAOO with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm DROO with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm Local with 10 WDs begin.
+
+40
+
+f_i， [103.97798307698363, 187.35329951595932, 114.2524101764051, 122.34540953876235, 91.63191010246845, 75.21399964009277, 175.5231635116365, 188.21419715801053, 41.26026266457393, 108.92205372966161]
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm EAOOSIC with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm EAOO with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm DROO with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm Local with 10 WDs begin.
+
+60
+
+f_i， [117.03937806477705, 122.90877864226043, 161.37992992362308, 87.38229862975187, 165.27680301073235, 96.91950130469479, 73.10430698895533, 141.42303771878926, 120.46842251223657, 165.5790824625754]
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm EAOOSIC with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm EAOO with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm DROO with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm Local with 10 WDs begin.
+
+80
+
+f_i， [122.5435935623078, 173.88088330407066, 125.63314269313071, 97.8767199494904, 179.97481168826533, 146.1855958856833, 136.45581879584614, 131.83329544197963, 192.0902688139604, 137.4811358949762]
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm EAOOSIC with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm EAOO with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm DROO with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm Local with 10 WDs begin.
+
+100
+
+f_i， [113.47968916754249, 119.44187275281031, 108.09215683023973, 123.59483890915895, 152.15642834490384, 192.64236671312983, 193.89465097612396, 163.22202595259958, 184.95568347793392, 189.89160524864866]
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm EAOOSIC with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm EAOO with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm DROO with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm Local with 10 WDs begin.
+
+120
+
+f_i， [171.8990139769316, 162.99155211744971, 133.70349765510974, 147.1824651905356, 150.71798048383832, 136.523212865086, 130.69748287421976, 128.04451343883213, 182.7229090306576, 198.4947621368724]
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm EAOOSIC with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm EAOO with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm DROO with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm Local with 10 WDs begin.
+
+140
+
+f_i， [171.13073881062328, 153.1878800017896, 176.45429163171235, 144.39112359253087, 176.20982423255066, 145.30336643952012, 145.88679175548623, 184.16183454143754, 199.34647299646554, 176.23398613560423]
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm EAOOSIC with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm EAOO with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm DROO with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm Local with 10 WDs begin.
+
+160
+
+f_i， [180.72368349627808, 180.53110099526754, 175.76720930116363, 185.04502908170366, 199.83615130283206, 170.61726160842235, 188.73327456106824, 173.30686193342706, 165.718567332872, 175.89680244977387]
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm EAOOSIC with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm EAOO with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm DROO with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm Local with 10 WDs begin.
+
+180
+
+f_i， [187.09292098607523, 194.5600196605257, 189.4067958124927, 196.24686271097406, 194.65721377503948, 193.68871039685158, 182.19293637746887, 186.5525943252608, 190.63472314796073, 184.9176052657714]
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm EAOOSIC with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm EAOO with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm DROO with 10 WDs begin.
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+The algorithm Local with 10 WDs begin.
+
+200-200
+
+f_i， [200.0, 200.0, 200.0, 200.0, 200.0, 200.0, 200.0, 200.0, 200.0, 200.0]
+10 个 WDs 算法停止的时间帧(0-2999): 2999
+
+Process finished with exit code 0
