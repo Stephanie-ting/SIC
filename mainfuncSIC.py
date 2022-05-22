@@ -209,9 +209,9 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
         # 本地
         # 进行判断，数据上传时间大于一个时间帧，不适宜边缘计算
 
-        C_local_ori = []
-        C_up_ori = []
-        uploadrecord_ori = []
+        C_local_ori = []   #决策变量精简前，存所有设备 如果本地执行将耗费的能耗
+        C_up_ori = []    #决策变量精简前，存所有设备 如果边缘执行将耗费的能耗
+        uploadrecord_ori = []    #决策变量精简前，存所有设备 如果边缘执行将用的时延
 
         D_i = []
         upload = []  # 记录决策变量精简后设备的上传时延
@@ -252,8 +252,8 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
             C_up_ori.append(C_up_E)
             # 数据上传时延超出一个时间帧 或者 能耗超出当前电量
             uploadrecord = dataUpload(B, P[index], h0[index], N_0, D_i_list[index])  # 记录设备的数据上传时延
-
             uploadrecord_ori.append(uploadrecord)
+
             C_local = localEnergyCost(amin, f_i[index], D_i_list[index], g_i[index])
             C_local_ori.append(C_local)
 
@@ -271,11 +271,11 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
                     or energyCost(E_i[index], C_up_E) < E_min[index]:
                 local_list.append(index)
                 # 上个时间帧内任务执行完，更新为该时间帧的时延；未执行完不变，表示剩余时延
-                if D_i_list[index] != 0:
+                if D_i_list[index] != 0:  #执行完，更新为该时间帧的时延
                     flagWD[index] = D_i_list[index] * g_i[index] / f_i[index]
                 # 精简部分时延（确定本地执行）
                 localsimple += D_i_list[index] * g_i[index] / f_i[index]
-                if D_i_list[index] == 0:
+                if D_i_list[index] == 0:  #未执行完不变，表示剩余时延
                     q_temp = flagWD[index]
                 else:
                     q_temp = 1. / (D_i_list[index] * g_i[index] / f_i[index])
@@ -343,7 +343,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
         for m in m_list:
             for index in local_list:
                 m = np.insert(m, index, 0)
-            #print("补全后的m：",m)
+            print("补全后的m：",m)
 
         # *对补全后的设备进行分组    *todo   需要再检查一下， 两个for循环，是用 for in range(len(list)) 还是直接 for in range list
         def split_group_lantency(m):
@@ -457,8 +457,7 @@ if __name__ == "__main__":
     B_ = 30
     T_ = 2
     # Ps_ = 50
-    for lowrate in range(20, 220, 20):
-        N = 10
+    for N in range(10, 32, 2):
         n = 3000
 
         E_min = np.mat(abs(np.random.uniform(low=10.0, high=20.0, size=1 * N)).reshape(1, N))
@@ -467,7 +466,7 @@ if __name__ == "__main__":
         P = np.mat(abs(np.random.uniform(low=0.5, high=0.6, size=1 * N)).reshape(1, N))
         # 计算速率 均匀分布 50-100 [N*1]
         # f_i = np.mat(abs(np.random.uniform(low=80, high=100, size=1 * N)).reshape(1, N))
-        f_i = np.mat(abs(np.random.uniform(low=lowrate, high=200, size=1 * N)).reshape(1, N))
+        f_i = np.mat(abs(np.random.uniform(low=150, high=200, size=1 * N)).reshape(1, N))
 
         # E_i = np.mat(abs(np.random.normal(loc=23.0, scale=5.0, size=n * N)).reshape(n, N))
         # tips:固定成n个基础值 初始电量[N*1]
@@ -477,10 +476,10 @@ if __name__ == "__main__":
         g_i = np.mat(abs(np.random.uniform(low=2, high=3, size=n * N)).reshape(n, N))
         # 任务数据量 均匀分布 50-100 [N*n]
         D_i_list = np.mat(abs(np.random.uniform(low=50, high=150, size=n * N)).reshape(n, N))
+
         # EAOO-SIC算法
-        EAOOSIC_time, EAOOSIC_lantency, stop_time_sic = EAOO_latest(N, n, E_min, P, E_i, D_i_list, f_i, g_i, B_, T_,
-                                                                    lowrate)
-        EAOOSIC_lantency_average = EAOOSIC_lantency / (stop_time_sic + 1)  # * 获得具体停止的时间帧stop_time，根据改时间帧得到平均lantency
+        EAOOSIC_time, EAOOSIC_lantency, stop_time_sic = EAOO_latest(N, n, E_min, P, E_i, D_i_list, f_i, g_i, B_, T_)
+        EAOOSIC_lantency_average = EAOOSIC_lantency / (stop_time_sic + 1)  # * 获得具体停止的时间帧stop_time，根据改时间帧到平均lantency
         EAOOSIC_lantency_list.append(EAOOSIC_lantency_average)
         EAOOSIC_time_list.append(EAOOSIC_time)
 
