@@ -307,37 +307,6 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
         m_list_true = []  # 记录保底可行解 + m_list中可行的卸载决策
 
         # todo 此行以上的代码还未复查
-
-        # 生成一组保底可行解
-        feasible_decision = getfeasibleres(edge_list, upload, recordD_i, recordg_i, recordf_i, E_min_rec, C_local_rec,
-                                           C_up_rec,
-                                           E_i_record, wireless_devices, server, alpha, N_0, beta, T)
-        # print("原始生成的保底可行解:", feasible_decision)
-
-        # 先补全这个保底的可行解
-        for index in local_list:
-            feasible_decision = np.insert(feasible_decision, index, 0)
-        # print("补全后的保底可行解:", feasible_decision)
-        m_list_true.append(feasible_decision)
-
-        # * 计算最大奖励
-        r_list = []  # 记录时延---保底可行解和满足可行性分析的解
-        # 计算保底可行解的时延
-        feasible_lantency = 0
-        for id in range(len(feasible_decision)):
-            feasible_lantency += feasible_decision[id] * uploadrecord_ori[id] + (1 - feasible_decision[id]) * (
-                    D_i_list[id] * g_i[id] / f_i[id])
-        r_list.append(feasible_lantency)
-        # print("保底时延：",feasible_lantency)
-
-        # 先补全每个决策变量 m
-        for j in range(len(m_list)):
-            for index in local_list:
-                m_list[j] = np.insert(m_list[j], index, 0)
-            # print("补全后的m：", m_list[j])
-
-        # *对补全后的设备进行分组
-        # todo 需要再检查一下， 两个for循环，是用 for in range(len(list)) 还是直接 for in range list
         def split_group_latency(m):
             up_devices = []
             local_lantency = 0
@@ -364,6 +333,37 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
                 up_lantency += up_time  # 所有的组的最大的上传时延之和
 
             return up_lantency, local_lantency
+
+
+        # 生成一组保底可行解
+        feasible_decision = getfeasibleres(edge_list, upload, recordD_i, recordg_i, recordf_i, E_min_rec, C_local_rec,
+                                           C_up_rec,
+                                           E_i_record, wireless_devices, server, alpha, N_0, beta, T)
+        # print("原始生成的保底可行解:", feasible_decision)
+
+        # 先补全这个保底的可行解
+        for index in local_list:
+            feasible_decision = np.insert(feasible_decision, index, 0)
+        # print("补全后的保底可行解:", feasible_decision)
+        m_list_true.append(feasible_decision)
+
+        # * 计算最大奖励
+        r_list = []  # 记录时延---保底可行解和满足可行性分析的解
+
+        # 计算保底可行解的时延
+        feasible_up, feasible_local = split_group_latency(feasible_decision)
+        feasible_lantency = feasible_up + feasible_local
+        r_list.append(feasible_lantency)
+        # print("保底时延：",feasible_lantency)
+
+        # 先补全每个决策变量 m
+        for j in range(len(m_list)):
+            for index in local_list:
+                m_list[j] = np.insert(m_list[j], index, 0)
+            # print("补全后的m：", m_list[j])
+
+        # *对补全后的设备进行分组
+        # todo 需要再检查一下， 两个for循环，是用 for in range(len(list)) 还是直接 for in range list
 
         # * 可行性分析
         for m in m_list:
@@ -405,8 +405,9 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
                     if energy_limit < E_min[m_idx]:
                         break
                 else:
-                    latency_min_all = min(latency_min_all, m_latency)
-                    final_m_all = m
+                    if m_latency < latency_min_all:
+                        latency_min_all = m_latency
+                        final_m_all = m[:]
         print("第 %d 个时间帧，当前的 遍历 / EAOO 结果为：%.4f" % (i, latency_min_all / totallantency_singleframe))
         print(" 遍历 ：  ", final_m_all)
         print(" EAOO ： ", final_m)
@@ -478,10 +479,11 @@ if __name__ == "__main__":
     All_latency_list = []   # 遍历情况的
 
     B_ = 30
-    T_ = 0.5
+    T_ = 1
     # Ps_ = 50
-    for lowrate in range(20, 220, 20):
-        N = 10
+    for _ in range(20, 220, 20):
+        lowrate = 20
+        N = 15
         n = 3000
 
         E_min = np.mat(abs(np.random.uniform(low=10.0, high=20.0, size=1 * N)).reshape(1, N))
