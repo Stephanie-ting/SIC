@@ -315,7 +315,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
         # 先补全这个保底的可行解
         for index in local_list:
             feasible_decision = np.insert(feasible_decision, index, 0)
-        print("补全后的保底可行解:", feasible_decision)
+        # print("补全后的保底可行解:", feasible_decision)
         m_list_true.append(feasible_decision)
 
         # * 计算最大奖励
