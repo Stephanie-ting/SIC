@@ -79,8 +79,6 @@ def EAOO_local(N_, n_, E_min_, E_i_, D_i_list_, f_i_, g_i_, B, T_=2):
     stop_time = n - 1  # * 算法在哪个时间帧停止
     for i in range(n):
 
-
-
         if i % (n // 10) == 0:
             pass
 
@@ -93,10 +91,9 @@ def EAOO_local(N_, n_, E_min_, E_i_, D_i_list_, f_i_, g_i_, B, T_=2):
 
         h = channel[i_idx, :]
         h0 = channel0[i_idx, :]
+
         D_i_list = D_i_list_[i, :].tolist()[0]
         E_i = E_i_[i, :].tolist()[0]
-
-
         g_i = g_i_[i, :].tolist()[0]
 
 
@@ -104,6 +101,7 @@ def EAOO_local(N_, n_, E_min_, E_i_, D_i_list_, f_i_, g_i_, B, T_=2):
             if flagWD[fl] > T:
                 D_i_list[fl] = 0
                 flagWD[fl] -= T  # 本轮执行完后所需的时间帧数减
+
 
         # 各无线设备能量更新
         for index in range(N):
@@ -116,10 +114,15 @@ def EAOO_local(N_, n_, E_min_, E_i_, D_i_list_, f_i_, g_i_, B, T_=2):
                 E_flag = True
                 break
 
+            #能量更新
             E_i[index]  -= C_local
+
             if D_i_list[index] != 0:
                 flagWD[index] = D_i_list[index] * g_i[index] / f_i[index]
-            totallantency += D_i_list[index] * g_i[index] / f_i[index]
+                temp_latency = D_i_list[index] * g_i[index] / f_i[index]
+            else:
+                temp_latency = flagWD[index]
+            totallantency += temp_latency
 
         if E_flag:
             break
