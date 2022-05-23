@@ -21,7 +21,7 @@ if __name__ == '__main__':
     T_ = 2
 
     for B in range(10, 32, 2):
-        N = 20
+        N = 10
         n = 3000
 
         E_min = np.mat(abs(np.random.uniform(low=10.0, high=20.0, size=1 * N)).reshape(1, N))

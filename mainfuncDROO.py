@@ -322,7 +322,7 @@ def DROO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
                 if D_i_list[id] == 0 or uploadrecord_ori[id] == 0:
                     m_temp = flagWD[id]
                 else:
-                    m_temp = m[id] * uploadrecord_ori[id] + (1 - m[id]) * (D_i[id] * g_i[id] / f_i[id])
+                    m_temp = m[id] * uploadrecord_ori[id] + (1 - m[id]) * (D_i_list[id] * g_i[id] / f_i[id])
             m_lantency += m_temp
 
             # 时延约束 和 能量约束 判断
@@ -333,7 +333,7 @@ def DROO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
                     if energy_limit < E_min[i]:
                         break
                 else:
-                    m_list_true.append(m)
+                    m_list_true.append(m.tolist())
                     m_list_lantency.append(m_lantency)
 
         #print("可行解有：", m_list_true)

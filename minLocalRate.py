@@ -17,10 +17,10 @@ if __name__ == '__main__':
     DROO_localrate_latency_list = []
     local_localrate_latency_list = []
     B_ = 30
-    T_ = 1
+    T_ = 2
     #Ps_ = 50
     for lowrate in range(20, 220, 20):
-        N = 20
+        N = 10
         n = 3000
 
         E_min = np.mat(abs(np.random.uniform(low=10.0, high=20.0, size=1 * N)).reshape(1, N))

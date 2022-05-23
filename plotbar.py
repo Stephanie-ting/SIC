@@ -252,7 +252,7 @@ def plot_time_R(EAOOSIC_filename, EAOO_filename, DROO_filename, local_filename, 
              }
     # 设置刻度范围
     plt.xlim(10, 215,20)
-    plt.ylim(0, 11,1)
+    plt.ylim(0, 30,1)
     total_width, n = 15, 4
     width = total_width / n
 
