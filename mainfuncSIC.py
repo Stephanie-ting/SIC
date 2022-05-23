@@ -271,7 +271,6 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
                 # 上个时间帧内任务执行完，更新为该时间帧的时延；未执行完不变，表示剩余时延
                 if D_i_list[index] != 0:    #上个时间帧内任务执行完，更新为该时间帧的时延
                     flagWD[index] = D_i_list[index] * g_i[index] / f_i[index]
-                continue
             else:
                 # 记录决策变量精简后各设备的参数
                 C_up_rec.append(C_up_E)
@@ -355,7 +354,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
             for lst in split_list:  # [[1,2,3],[4,6],[7]]
                 up_time = 0  # 每个分组中最大的上传时延
                 for id in lst:  # [1,2,3]
-                    if D_i[id] == 0 or upload[id] == 0:
+                    if D_i_list[id] == 0 or uploadrecord_ori[id] == 0:
                         up_time_temp = flagWD[id]
                     else:
                         up_time_temp = uploadrecord_ori[id]
