@@ -274,8 +274,8 @@ def EAOO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
                 # 上个时间帧内任务执行完，更新为该时间帧的时延；未执行完不变，表示剩余时延
                 if D_i_list[index] != 0:
                     flagWD[index] = D_i_list[index] * g_i[index] / f_i[index]
-                # 精简部分时延（确定本地执行）
-                totallantency_final += D_i_list[index] * g_i[index] / f_i[index]
+                # # 精简部分时延（确定本地执行）
+                # totallantency_final += D_i_list[index] * g_i[index] / f_i[index]
             else:
                 # 记录决策变量精简后各设备的参数
                 C_up_rec.append(C_up_E)
@@ -323,12 +323,21 @@ def EAOO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
         #print("补全后的保底可行解:",feasible_decision)
         m_list_true.append(feasible_decision)
 
+        # * 计算最大奖励
+        r_list = []
+        # 计算保底可行解的时延
+        feasible_lantency = 0
+        for id in range(len(feasible_decision)):
+            feasible_lantency = feasible_decision[id] * uploadrecord_ori[id] + (1 - feasible_decision[id]) * (
+                        D_i_list[id] * g_i[id] / f_i[id])
+        r_list.append(feasible_lantency)
+
         # 先补全每个决策变量 m
         for j in range(len(m_list)):
             for index in local_list:
                 m_list[j] = np.insert(m_list[j], index, 0)
 
-        m_list_lantency = []
+        # m_list_lantency = []
         # * 可行性分析
         for m in m_list:
             # 补全变量后，各决策变量的总时延  #todo 修改了这里，你看一下对不对
@@ -351,38 +360,37 @@ def EAOO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
                             break
                 else:
                     m_list_true.append(m.tolist())
-                    m_list_lantency.append(m_lantency)
+                    r_list.append(m_lantency)
         #print("可行解有：", m_list_true)
 
-        r_list = []
-        #计算保底可行解的时延
-        feasible_lantency = 0
-        for id in range(len(feasible_decision)):
-            feasible_lantency = feasible_decision[id] * uploadrecord_ori[id] + (1 - feasible_decision[id]) * (D_i_list[id] * g_i[id] / f_i[id])
-        r_list.append(1./feasible_lantency)
 
-        #计算其他可行解的时延
-        for i in range(len(m_list_lantency)):
-            r = 1. / m_list_lantency[i]
-            r_list.append(r)
+
+        # #计算其他可行解的时延
+        # for i in range(len(m_list_lantency)):
+        #     r = 1. / m_list_lantency[i]
+        #     r_list.append(r)
         #print("各个可行解的奖励：", r_list)
-        final_m = m_list_true[np.argmax(r_list)]   # 从可行决策变量中选取最大奖励
+        final_m = m_list_true[np.argmin(r_list)]   # 从可行决策变量中选取时延最小的
+        totallantency_singleframe = min(r_list)
 
+        # 3000个时间帧的总时延
+        totallantency_final += totallantency_singleframe
 
         optimal_m = final_m   #最优解是optimal_m！！！
         print("第",current_lot,"个时间帧,最优的可行解是：", optimal_m)
-        # 未精简部分该时间帧是否执行完的更新
+
 
         #for index in local_list:
         final_m = np.delete(final_m,local_list)
 
         #w = analysemiu(final_m, upload, T)
 
+        # 未精简部分该时间帧是否执行完的更新
         for id in range(len(final_m)):
             if upload[id] != 0 and D_i_list[id] != 0:
                 flagWD[edge_list[id]] = (final_m[id] * upload[id]) + (1 - final_m[id]) * (recordD_i[id] * recordg_i[id] / recordf_i[id])
             #未精简部分时延
-            totallantency_final += final_m[id] * upload[id] + (1 - final_m[id]) * (recordD_i[id] * recordg_i[id] / recordf_i[id])
+            # totallantency_final += final_m[id] * upload[id] + (1 - final_m[id]) * (recordD_i[id] * recordg_i[id] / recordf_i[id])
 
         # 各设备进行能量更新
         for index in range(N):
@@ -400,10 +408,10 @@ def EAOO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
 
         # the following codes store some interested metrics for illustrations
         # memorize the largest reward
-        rate_his.append(np.max(r_list))
+        rate_his.append(np.min(r_list))
         rate_his_ratio.append(rate_his[-1] / rate[i_idx][0])
         # record the index of largest reward
-        k_idx_his.append(np.argmax(r_list))
+        k_idx_his.append(np.argmin(r_list))
         # record K in case of adaptive K
         K_his.append(K)
         # mode_his.append(m_list[np.argmax(r_list)])
