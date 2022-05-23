@@ -333,7 +333,7 @@ def DROO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
                     if energy_limit < E_min[i]:
                         break
                 else:
-                    m_list_true.append(m)
+                    m_list_true.append(m.tolist())
                     m_list_lantency.append(m_lantency)
 
         #print("可行解有：", m_list_true)
