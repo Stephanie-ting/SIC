@@ -236,9 +236,9 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
 
         # Q = []
         for fl in range(N):  # 上轮该无线设备未执行完任务，本轮不予分配新的任务
-            if flagWD[fl] > T:
-                D_i_list[fl] = 0
-                flagWD[fl] -= T  # 本轮执行完后所需的时间帧数减一
+            if flagWD[fl] > T:        #第一个时间帧该设备需执行的时间 >T
+                D_i_list[fl] = 0     #本时间帧 第二个时间帧 D_i = 0
+                flagWD[fl] -= T  # 第一个时间帧后，还需要多久
 
         # local_lantency = 0  # 精简掉的设备的时延
         for index in range(N):
@@ -266,20 +266,11 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
                 # print(i)
 
             # 决策变量精简，确定为本地执行
-            if uploadrecord > T \
-                    or energyCost(E_i[index], C_up_E) < E_min[index]:
+            if uploadrecord > T or energyCost(E_i[index], C_up_E) < E_min[index]:
                 local_list.append(index)
                 # 上个时间帧内任务执行完，更新为该时间帧的时延；未执行完不变，表示剩余时延
-                if D_i_list[index] != 0:
+                if D_i_list[index] != 0:    #上个时间帧内任务执行完，更新为该时间帧的时延
                     flagWD[index] = D_i_list[index] * g_i[index] / f_i[index]
-                # 精简部分时延（确定本地执行）
-                localsimple += D_i_list[index] * g_i[index] / f_i[index]
-                if D_i_list[index] == 0:
-                    q_temp = flagWD[index]
-                else:
-                    q_temp = 1. / (D_i_list[index] * g_i[index] / f_i[index])
-                q_list_local.append(q_temp)
-                # E_i[index] -= C_local
                 continue
             else:
                 # 记录决策变量精简后各设备的参数
@@ -353,14 +344,21 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
                 if m[i] == 1:
                     up_devices.append(wireless_devices[i])
                 else:
-                    local_lantency += D_i[i] * g_i[i] / f_i[i]
+                    if D_i_list[i] == 0:
+                        q_temp = flagWD[i]
+                    else:
+                        q_temp = D_i_list[i] * g_i[i] / f_i[i]
+                    local_lantency += q_temp
             split_list = sic(devices_all=up_devices, server=server, alpha=alpha, N0=N_0, beta=beta)
 
             up_lantency = 0
             for lst in split_list:  # [[1,2,3],[4,6],[7]]
                 up_time = 0  # 每个分组中最大的上传时延
                 for id in lst:  # [1,2,3]
-                    up_time_temp = dataUpload(B, P[id], h0[id], N_0, D_i_list[id])
+                    if D_i[id] == 0 or upload[id] == 0:
+                        up_time_temp = flagWD[id]
+                    else:
+                        up_time_temp = uploadrecord_ori[id]
                     up_time = max(up_time, up_time_temp)
                 up_lantency += up_time  # 所有的组的最大的上传时延之和
 
