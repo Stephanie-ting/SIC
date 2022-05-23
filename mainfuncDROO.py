@@ -270,13 +270,6 @@ def DROO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
                     flagWD[index] = D_i_list[index] * g_i[index] / f_i[index]
                 # 精简部分时延（确定本地执行）
                 totallantency_final += D_i_list[index] * g_i[index] / f_i[index]
-                if D_i_list[index] == 0:
-                    q_temp = flagWD[index]
-                else:
-                    q_temp = 1. / (D_i_list[index] * g_i[index] / f_i[index])
-                q_list_local.append(q_temp)
-                #E_i[index] -= C_local
-                continue
             else:
                 # 记录决策变量精简后各设备的参数
                 C_up_rec.append(C_up_E)
@@ -312,33 +305,25 @@ def DROO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
         m_list_true = []  # 记录m_list中可行的卸载决策
 
 
-        # 生成一组保底可行解
-        # feasible_decision = getfeasibleres(edge_list, upload, recordD_i, recordg_i, recordf_i, E_min_rec, C_local_rec, C_up_rec, E_i_record, T)
-        # feasible_decision = getfeasibleres(edge_list, upload, recordD_i, recordg_i, recordf_i, E_min_rec, C_local_rec, C_up_rec,
-        #         E_i, wireless_devices, server, alpha, N_0, beta, T)
-        # print("原始生成的保底可行解:", feasible_decision)
-
-        #先补全这个保底的可行解
-        # for index in local_list:
-        #     feasible_decision = np.insert(feasible_decision, index, 0)
-            #feasible_decision[index] = 0
-        #print("补全后的保底可行解:",feasible_decision)
-        # m_list_true.append(feasible_decision)
+        # 先补全每个决策变量 m
+        for j in range(len(m_list)):
+            for index in local_list:
+                m_list[j] = np.insert(m_list[j], index, 0)
 
 
         m_list_lantency = []
         # * 可行性分析
         for m in m_list:
-            # 补全 m_list
-            for index in local_list:
-                # m[index] = 0
-                m = np.insert(m, index, 0)
-
-           #补全变量后，各决策变量的总时延
+            # 补全变量后，各决策变量的总时延  #todo 修改了这里，你看一下对不对
             m_lantency = 0
+            m_temp = 0
             for id in range(len(m)):
-                #time_limit  += m[id] * uploadrecord_ori[id]
-                m_lantency += m[id] * uploadrecord_ori[id] + (1 - m[id]) * (D_i[id] * g_i[id] / f_i[id])
+                # time_limit  += m[id] * uploadrecord_ori[id]
+                if D_i_list[id] == 0 or uploadrecord_ori[id] == 0:
+                    m_temp = flagWD[id]
+                else:
+                    m_temp = m[id] * uploadrecord_ori[id] + (1 - m[id]) * (D_i[id] * g_i[id] / f_i[id])
+            m_lantency += m_temp
 
             # 时延约束 和 能量约束 判断
             if analysemiu(m, uploadrecord_ori, T) >= 0:
@@ -377,11 +362,6 @@ def DROO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
                     flagWD[edge_list[id]] = (final_m[id] * upload[id]) + (1 - final_m[id]) * (recordD_i[id] * recordg_i[id] / recordf_i[id])
                 #加上精简之后的时延
                 totallantency_final += final_m[id] * upload[id] + (1 - final_m[id]) * (recordD_i[id] * recordg_i[id] / recordf_i[id])
-
-
-            #最优解 最终的总时延
-            #for id in range(len(optimal_m)):
-                #totallantency_final += optimal_m[id] * uploadrecord_ori[id] + (1 - optimal_m[id]) * (D_i[id] * g_i[id] / f_i[id])
 
             # 各设备进行能量更新
             for index in range(N):
