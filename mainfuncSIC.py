@@ -212,7 +212,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
         C_up_ori = []
         uploadrecord_ori = []
 
-        D_i = []
+        # D_i = []
         upload = []  # 记录决策变量精简后设备的上传时延
         recordD_i = []  # 记录决策变量精简后的处理任务量
         recordf_i = []  # 记录决策变量精简后的本地执行速率
@@ -246,7 +246,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
             # 精简时w=1分析能量约束
             # H_get = getH(1, T, h0[index], Ps, eh_i[index])
             # help_lamta = helplamta(T, h0[index], Ps, eh_i[index])
-            D_i.append(np.mean(D_i_list))
+            # D_i.append(np.mean(D_i_list))
             C_up_E = P[index] * dataUpload(B, P[index], h0[index], N_0, D_i_list[index])
             C_up_ori.append(C_up_E)
             # 数据上传时延超出一个时间帧 或者 能耗超出当前电量
@@ -324,7 +324,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
         feasible_lantency = 0
         for id in range(len(feasible_decision)):
             feasible_lantency += feasible_decision[id] * uploadrecord_ori[id] + (1 - feasible_decision[id]) * (
-                    D_i[id] * g_i[id] / f_i[id])
+                    D_i_list[id] * g_i[id] / f_i[id])
         r_list.append(feasible_lantency)
         # print("保底时延：",feasible_lantency)
 
