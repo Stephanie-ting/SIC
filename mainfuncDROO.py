@@ -316,14 +316,14 @@ def DROO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
         for m in m_list:
             # 补全变量后，各决策变量的总时延  #todo 修改了这里，你看一下对不对
             m_lantency = 0
-            m_temp = 0
+
             for id in range(len(m)):
                 # time_limit  += m[id] * uploadrecord_ori[id]
                 if D_i_list[id] == 0 or uploadrecord_ori[id] == 0:
                     m_temp = flagWD[id]
                 else:
                     m_temp = m[id] * uploadrecord_ori[id] + (1 - m[id]) * (D_i_list[id] * g_i[id] / f_i[id])
-            m_lantency += m_temp
+                m_lantency += m_temp
 
             # 时延约束 和 能量约束 判断
             if analysemiu(m, uploadrecord_ori, T) >= 0:

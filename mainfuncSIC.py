@@ -318,15 +318,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
         # print("补全后的保底可行解:", feasible_decision)
         m_list_true.append(feasible_decision)
 
-        # * 计算最大奖励
-        r_list = []  # 记录时延---保底可行解和满足可行性分析的解
-        # 计算保底可行解的时延
-        feasible_lantency = 0
-        for id in range(len(feasible_decision)):
-            feasible_lantency += feasible_decision[id] * uploadrecord_ori[id] + (1 - feasible_decision[id]) * (
-                    D_i_list[id] * g_i[id] / f_i[id])
-        r_list.append(feasible_lantency)
-        # print("保底时延：",feasible_lantency)
+
 
         # 先补全每个决策变量 m
         for j in range(len(m_list)):
@@ -347,6 +339,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
                         q_temp = flagWD[i]
                     else:
                         q_temp = D_i_list[i] * g_i[i] / f_i[i]
+                    print("每个设备的q_temp:",q_temp)
                     local_lantency += q_temp
             split_list = sic(devices_all=up_devices, server=server, alpha=alpha, N0=N_0, beta=beta)
 
@@ -362,6 +355,18 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
                 up_lantency += up_time  # 所有的组的最大的上传时延之和
 
             return up_lantency, local_lantency
+
+        # * 计算最大奖励
+        r_list = []  # 记录时延---保底可行解和满足可行性分析的解
+        # 计算保底可行解的时延
+        feasible_lantency = 0
+        # for id in range(len(feasible_decision)):
+        #     feasible_lantency += feasible_decision[id] * uploadrecord_ori[id] + (1 - feasible_decision[id]) * (
+        #             D_i_list[id] * g_i[id] / f_i[id])
+        feasible_up, feasible_local = split_group_latency(feasible_decision)
+        feasible_lantency = feasible_up + feasible_local
+        r_list.append(feasible_lantency)
+        # print("保底时延：",feasible_lantency)
 
         # * 可行性分析
         for m in m_list:
@@ -380,7 +385,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
                 else:
                     m_list_true.append(m.tolist())
                     r_list.append(m_lantency)
-        print("可行解有：", m_list_true)
+        # print("可行解有：", m_list_true)
 
         final_m = m_list_true[np.argmin(r_list)]  # 从可行决策变量中选取时延最小的决策
         # totallantency_singleframe = all_lantency_list[np.argmax(r_list)]
@@ -388,7 +393,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
         # print("第",current_lot,"个时间帧内最优总时延：",totallantency_singleframe)
 
         optimal_m = final_m  # 当前时间帧的最优解是optimal_m！！！
-        print("第", current_lot, "个时间帧,最优的可行解是：", optimal_m)
+        # print("第", current_lot, "个时间帧,最优的可行解是：", optimal_m)
 
         # 3000个时间帧的总时延
         totallantency_final += totallantency_singleframe
@@ -452,10 +457,9 @@ if __name__ == "__main__":
     EAOOSIC_time_list = []
 
     B_ = 30
-    T_ = 0.5
+    T_ = 2
     # Ps_ = 50
-    for lowrate in range(20, 220, 20):
-        N = 10
+    for N in range(10, 32, 2):
         n = 3000
 
         E_min = np.mat(abs(np.random.uniform(low=10.0, high=20.0, size=1 * N)).reshape(1, N))
@@ -464,7 +468,7 @@ if __name__ == "__main__":
         P = np.mat(abs(np.random.uniform(low=0.5, high=0.6, size=1 * N)).reshape(1, N))
         # 计算速率 均匀分布 50-100 [N*1]
         # f_i = np.mat(abs(np.random.uniform(low=80, high=100, size=1 * N)).reshape(1, N))
-        f_i = np.mat(abs(np.random.uniform(low=lowrate, high=200, size=1 * N)).reshape(1, N))
+        f_i = np.mat(abs(np.random.uniform(low=150, high=200, size=1 * N)).reshape(1, N))
 
         # E_i = np.mat(abs(np.random.normal(loc=23.0, scale=5.0, size=n * N)).reshape(n, N))
         # tips:固定成n个基础值 初始电量[N*1]
@@ -474,12 +478,12 @@ if __name__ == "__main__":
         g_i = np.mat(abs(np.random.uniform(low=2, high=3, size=n * N)).reshape(n, N))
         # 任务数据量 均匀分布 50-100 [N*n]
         D_i_list = np.mat(abs(np.random.uniform(low=50, high=150, size=n * N)).reshape(n, N))
+
         # EAOO-SIC算法
         EAOOSIC_time, EAOOSIC_lantency, stop_time_sic = EAOO_latest(N, n, E_min, P, E_i, D_i_list, f_i, g_i, B_, T_)
-        EAOOSIC_lantency_average = EAOOSIC_lantency / (stop_time_sic + 1)  # * 获得具体停止的时间帧stop_time，根据改时间帧得到平均lantency
+        EAOOSIC_lantency_average = EAOOSIC_lantency / (stop_time_sic + 1)  # * 获得具体停止的时间帧stop_time，根据改时间帧到平均lantency
         EAOOSIC_lantency_list.append(EAOOSIC_lantency_average)
         EAOOSIC_time_list.append(EAOOSIC_time)
-
         print("时延为：", EAOOSIC_lantency_average)
 
     print('------EAOO-SIC-----')

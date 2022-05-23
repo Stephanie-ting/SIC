@@ -342,14 +342,17 @@ def EAOO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
         for m in m_list:
             # 补全变量后，各决策变量的总时延  #todo 修改了这里，你看一下对不对
             m_lantency = 0
-            m_temp = 0
+
+            # print("此时的m：",m)
             for id in range(len(m)):
                 #time_limit  += m[id] * uploadrecord_ori[id]
                 if D_i_list[id] == 0 or uploadrecord_ori[id] == 0:
                     m_temp = flagWD[id]
                 else:
                     m_temp = m[id] * uploadrecord_ori[id] + (1 - m[id]) * (D_i_list[id] * g_i[id] / f_i[id])
-            m_lantency += m_temp
+                # print("每个设备的m_temp:",m_temp)
+                m_lantency += m_temp
+            # print("m_lantecy:",m_lantency)
 
             # 时延约束 和 能量约束 判断
             if analysemiu(m, uploadrecord_ori, T) >= 0:
@@ -364,17 +367,19 @@ def EAOO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
         #print("可行解有：", m_list_true)
 
 
-
         # #计算其他可行解的时延
         # for i in range(len(m_list_lantency)):
         #     r = 1. / m_list_lantency[i]
         #     r_list.append(r)
         #print("各个可行解的奖励：", r_list)
         final_m = m_list_true[np.argmin(r_list)]   # 从可行决策变量中选取时延最小的
+        print("第", current_lot, "个时间帧内r_list：", r_list)
         totallantency_singleframe = min(r_list)
+        print("第",current_lot,"个时间帧内最优总时延：",totallantency_singleframe)
 
         # 3000个时间帧的总时延
         totallantency_final += totallantency_singleframe
+
 
         optimal_m = final_m   #最优解是optimal_m！！！
         print("第",current_lot,"个时间帧,最优的可行解是：", optimal_m)
@@ -423,7 +428,7 @@ def EAOO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
     # plot_rate(rate_his_ratio)
     #
     # print(N, '个 WDs',"算法停止的时间帧(0-2999):", stop_time)
-    # print("本轮（3000个时间帧），最优总时延是,", totallantency_final)
+    print("本轮（3000个时间帧），最优总时延是,", totallantency_final)
     # print("本轮（3000个时间帧）为止，单个时间帧最优总时延平均值是,", totallantency_final/stop_time)
 
     #print(n, "个时间帧的总时延是：", totallantency_final)
@@ -444,8 +449,7 @@ if __name__ == "__main__":
     B_ = 30
     T_ = 2
     # Ps_ = 50
-    for lowrate in range(20, 220, 20):
-        N = 10
+    for N in range(10, 32, 2):
         n = 3000
 
         E_min = np.mat(abs(np.random.uniform(low=10.0, high=20.0, size=1 * N)).reshape(1, N))
@@ -454,7 +458,7 @@ if __name__ == "__main__":
         P = np.mat(abs(np.random.uniform(low=0.5, high=0.6, size=1 * N)).reshape(1, N))
         # 计算速率 均匀分布 50-100 [N*1]
         # f_i = np.mat(abs(np.random.uniform(low=80, high=100, size=1 * N)).reshape(1, N))
-        f_i = np.mat(abs(np.random.uniform(low=lowrate, high=200, size=1 * N)).reshape(1, N))
+        f_i = np.mat(abs(np.random.uniform(low=150, high=200, size=1 * N)).reshape(1, N))
 
         # E_i = np.mat(abs(np.random.normal(loc=23.0, scale=5.0, size=n * N)).reshape(n, N))
         # tips:固定成n个基础值 初始电量[N*1]
@@ -467,7 +471,7 @@ if __name__ == "__main__":
 
 
         # EAOO-串行
-        EAOO_time, EAOO_lantency, stop_time = EAOO_latest_serial(N, n, E_min, P, E_i, D_i_list, f_i, g_i, B_, T_, lowrate)
+        EAOO_time, EAOO_lantency, stop_time = EAOO_latest_serial(N, n, E_min, P, E_i, D_i_list, f_i, g_i, B_, T_)
         EAOO_lantency_average = EAOO_lantency / (stop_time + 1)
         EAOO_lantency_list.append(EAOO_lantency_average)
         EAOO_time_list.append(EAOO_time)
