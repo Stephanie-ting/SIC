@@ -339,7 +339,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
                         q_temp = flagWD[i]
                     else:
                         q_temp = D_i_list[i] * g_i[i] / f_i[i]
-                    print("每个设备的q_temp:",q_temp)
+                    # print("每个设备的q_temp:",q_temp)
                     local_lantency += q_temp
             split_list = sic(devices_all=up_devices, server=server, alpha=alpha, N0=N_0, beta=beta)
 
@@ -440,7 +440,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
     # print(N, '个 WDs', "算法停止的时间帧(0-2999):", stop_time)
     # print("本轮（3000个时间帧），最优总时延是,", totallantency_final)
     # print("本轮（3000个时间帧）为止，单个时间帧最优总时延平均值是,", totallantency_final/stop_time)
-    # print(N, '个 WDs',"算法停止的时间帧(0-2999):", stop_time)
+    print(N, '个 WDs',"算法停止的时间帧(0-2999):", stop_time)
 
     # print(stop_time + 1, "个时间帧的总时延是：", totallantency_final)
     return total_time, totallantency_final, stop_time

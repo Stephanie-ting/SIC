@@ -17,7 +17,7 @@ if __name__ == '__main__':
     DROO_localrate_latency_list = []
     local_localrate_latency_list = []
     B_ = 30
-    T_ = 2
+    T_ = 0.85
     #Ps_ = 50
     for lowrate in range(20, 220, 20):
         N = 10

@@ -18,7 +18,7 @@ if __name__ == '__main__':
     DROO_B_latency_list = []
     local_B_latency_list = []
     # B_ = 30
-    T_ = 2
+    T_ = 0.85
 
     for B in range(10, 32, 2):
         N = 10

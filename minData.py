@@ -17,7 +17,7 @@ if __name__ == '__main__':
     DROO_minData_latency_list = []
     local_minData_latency_list = []
     B_ = 30
-    T_ = 2
+    T_ = 0.85
 
     for lowdata in range(50, 160, 10):
 

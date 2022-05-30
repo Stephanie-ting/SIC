@@ -241,7 +241,7 @@ def DROO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
             # 精简时w=1分析能量约束
             #H_get = getH(1, T, h0[index], Ps, eh_i[index])
             #help_lamta = helplamta(T, h0[index], Ps, eh_i[index])
-            D_i.append(np.mean(D_i_list))
+            # D_i.append(np.mean(D_i_list))
             C_up_E = P[index] * dataUpload(B, P[index], h0[index], N_0, D_i_list[index])
             C_up_ori.append(C_up_E)
             # 数据上传时延超出一个时间帧 或者 能耗超出当前电量

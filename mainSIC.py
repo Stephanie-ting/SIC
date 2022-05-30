@@ -24,7 +24,7 @@ if __name__ == "__main__":
     DROO_disrunnable_list = []
 
     B_ = 30
-    T_ = 2
+    T_ = 0.85
 
     for N in range(10, 32, 2):
         n = 3000
