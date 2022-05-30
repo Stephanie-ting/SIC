@@ -39,7 +39,7 @@ import copy
 from sic_compute import *
 
 
-def plot_rate(rate_his, rolling_intv=50):
+def plot_rate(rate_his, rolling_intv=80):
     import matplotlib.pyplot as plt
     import pandas as pd
     import matplotlib as mpl
@@ -49,12 +49,11 @@ def plot_rate(rate_his, rolling_intv=50):
 
     mpl.style.use('seaborn')
     fig, ax = plt.subplots(figsize=(15, 8))
-    #    rolling_intv = 20
+    # rolling_intv = 20
 
     plt.plot(np.arange(len(rate_array)) + 1, df.rolling(rolling_intv, min_periods=1).mean(), 'b')
-    plt.fill_between(np.arange(len(rate_array)) + 1, df.rolling(rolling_intv, min_periods=1).min()[0],
-                     df.rolling(rolling_intv, min_periods=1).max()[0], color='b', alpha=0.2)
-    x_major_locator = MultipleLocator(1000)
+    #plt.fill_between(np.arange(len(rate_array)) + 1, df.rolling(rolling_intv, min_periods=1).min()[0], df.rolling(rolling_intv, min_periods=1).max()[0], color='b', alpha=0.2)
+    x_major_locator = MultipleLocator(3000)
     # 把x轴的刻度间隔设置为1，并存在变量里
     y_major_locator = MultipleLocator(0.1)
     # 把y轴的刻度间隔设置为10，并存在变量里
@@ -64,9 +63,9 @@ def plot_rate(rate_his, rolling_intv=50):
     # 把x轴的主刻度设置为1的倍数
     ax.yaxis.set_major_locator(y_major_locator)
     # 把y轴的主刻度设置为10的倍数
-    plt.xlim(0, 10000)
+    plt.xlim(0, 3000)
     plt.ylim(0.4, 1)
-    plt.ylabel('Normalized Time Delay')
+    plt.ylabel('Approximation Ratio')
     plt.xlabel('Time Frames')
     legend_font = {"family": "Times New Roman"}
     plt.legend(prop=legend_font)
@@ -121,15 +120,15 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
     # todo 他的h取的很神奇，不知道为啥这么取
     if N in [5, 6, 7, 8, 9, 10, 20, 30]:
         channel0 = sio.loadmat('./data/data_%d' % N)['input_h']
-        rate = sio.loadmat('./data/data_%d' % N)[
-            'output_obj']  # this rate is only used to plot figures; never used to train DROO.
+        # rate = sio.loadmat('./data/data_%d' % N)['output_obj']  # this rate is only used to plot figures; never used to train DROO.
     else:
         channel_temp = sio.loadmat('./data/data_%d' % 30)['input_h']
-        rate_temp = sio.loadmat('./data/data_%d' % 30)['output_obj']
+        # rate_temp = sio.loadmat('./data/data_%d' % 30)['output_obj']
         channel0 = channel_temp[:, 0:N]
-        rate = rate_temp[:, 0:N]
+        # rate = rate_temp[:, 0:N]
     # increase h to close to 1 for better training; it is a trick widely adopted in deep learning
     channel = channel0 * 1000000
+
 
     split_idx = int(.8 * len(channel))
     num_test = min(len(channel) - split_idx, n - int(.8 * n))  # training data size
@@ -144,6 +143,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
     start_time = time.time()
 
     rate_his = []
+    rate_all_his = []
     rate_his_ratio = []
     # mode_his = []
     k_idx_his = []
@@ -408,7 +408,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
                     if m_latency < latency_min_all:
                         latency_min_all = m_latency
                         final_m_all = m[:]
-        print("第 %d 个时间帧，当前的 遍历 / EAOO 结果为：%.4f" % (i, latency_min_all / totallantency_singleframe))
+        print("第 %d 个时间帧，当前的 遍历 / EAOO-SIC 结果为：%.4f" % (i, latency_min_all / totallantency_singleframe))
         print(" 遍历 ：  ", final_m_all)
         print(" EAOO ： ", final_m)
         latency_res_all += latency_min_all
@@ -445,8 +445,11 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
 
         # the following codes store some interested metrics for illustrations
         # memorize the largest reward
+        #记录 当前时间帧 的最小时延
         rate_his.append(np.min(r_list))
-        rate_his_ratio.append(rate_his[-1] / rate[i_idx][0])
+        rate_all_his.append(latency_min_all)
+        #记录 和 穷举遍历算法的时延 比率
+        rate_his_ratio.append(rate_all_his[-1]/rate_his[-1] )
 
         # record the index of largest reward
         k_idx_his.append(np.argmin(r_list))
@@ -456,7 +459,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
 
     total_time = time.time() - start_time
     # mem.plot_cost()
-    # plot_rate(rate_his_ratio)
+    plot_rate(rate_his_ratio)
 
     # print(N, '个 WDs', "算法停止的时间帧(0-2999):", stop_time)
     # print("本轮（3000个时间帧），最优总时延是,", totallantency_final)
@@ -479,11 +482,9 @@ if __name__ == "__main__":
     All_latency_list = []   # 遍历情况的
 
     B_ = 30
-    T_ = 1
+    T_ = 0.85
     # Ps_ = 50
-    for _ in range(20, 220, 20):
-        lowrate = 20
-        N = 15
+    for N in range(10, 32, 2):
         n = 3000
 
         E_min = np.mat(abs(np.random.uniform(low=10.0, high=20.0, size=1 * N)).reshape(1, N))
@@ -492,7 +493,7 @@ if __name__ == "__main__":
         P = np.mat(abs(np.random.uniform(low=0.5, high=0.6, size=1 * N)).reshape(1, N))
         # 计算速率 均匀分布 50-100 [N*1]
         # f_i = np.mat(abs(np.random.uniform(low=80, high=100, size=1 * N)).reshape(1, N))
-        f_i = np.mat(abs(np.random.uniform(low=lowrate, high=200, size=1 * N)).reshape(1, N))
+        f_i = np.mat(abs(np.random.uniform(low=150, high=200, size=1 * N)).reshape(1, N))
 
         # E_i = np.mat(abs(np.random.normal(loc=23.0, scale=5.0, size=n * N)).reshape(n, N))
         # tips:固定成n个基础值 初始电量[N*1]
@@ -502,6 +503,7 @@ if __name__ == "__main__":
         g_i = np.mat(abs(np.random.uniform(low=2, high=3, size=n * N)).reshape(n, N))
         # 任务数据量 均匀分布 50-100 [N*n]
         D_i_list = np.mat(abs(np.random.uniform(low=50, high=150, size=n * N)).reshape(n, N))
+
         # EAOO-SIC算法
         EAOOSIC_time, EAOOSIC_latency, stop_time_sic, latency_res_all = EAOO_latest(N, n, E_min, P, E_i, D_i_list, f_i, g_i, B_, T_)
         EAOOSIC_latency_average = EAOOSIC_latency / (stop_time_sic + 1)  # * 获得具体停止的时间帧stop_time，根据改时间帧得到平均lantency
