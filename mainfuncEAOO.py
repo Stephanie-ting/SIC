@@ -249,7 +249,7 @@ def EAOO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
             # 精简时w=1分析能量约束
             #H_get = getH(1, T, h0[index], Ps, eh_i[index])
             #help_lamta = helplamta(T, h0[index], Ps, eh_i[index])
-            D_i.append(np.mean(D_i_list))
+            # D_i.append(np.mean(D_i_list))
             C_up_E = P[index] * dataUpload(B, P[index], h0[index], N_0, D_i_list[index])
             C_up_ori.append(C_up_E)
             # 数据上传时延超出一个时间帧 或者 能耗超出当前电量
@@ -323,13 +323,12 @@ def EAOO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
         #print("补全后的保底可行解:",feasible_decision)
         m_list_true.append(feasible_decision)
 
-        # * 计算最大奖励
+        # * 计算最大奖励----最小时延
         r_list = []
         # 计算保底可行解的时延
         feasible_lantency = 0
         for id in range(len(feasible_decision)):
-            feasible_lantency = feasible_decision[id] * uploadrecord_ori[id] + (1 - feasible_decision[id]) * (
-                        D_i_list[id] * g_i[id] / f_i[id])
+            feasible_lantency += feasible_decision[id] * uploadrecord_ori[id] + (1 - feasible_decision[id]) * (D_i_list[id] * g_i[id] / f_i[id])
         r_list.append(feasible_lantency)
 
         # 先补全每个决策变量 m
@@ -337,7 +336,7 @@ def EAOO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
             for index in local_list:
                 m_list[j] = np.insert(m_list[j], index, 0)
 
-        # m_list_lantency = []
+        m_list_lantency = []
         # * 可行性分析
         for m in m_list:
             # 补全变量后，各决策变量的总时延  #todo 修改了这里，你看一下对不对
@@ -363,27 +362,25 @@ def EAOO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
                             break
                 else:
                     m_list_true.append(m.tolist())
-                    r_list.append(m_lantency)
+                    m_list_lantency.append(m_lantency)
         #print("可行解有：", m_list_true)
 
 
-        # #计算其他可行解的时延
-        # for i in range(len(m_list_lantency)):
-        #     r = 1. / m_list_lantency[i]
-        #     r_list.append(r)
-        #print("各个可行解的奖励：", r_list)
+        #计算其他可行解的时延
+        for i in range(len(m_list_lantency)):
+            r_list.append(m_list_lantency[i])
+        # print("各个可行解的奖励：", r_list)
         final_m = m_list_true[np.argmin(r_list)]   # 从可行决策变量中选取时延最小的
-        print("第", current_lot, "个时间帧内r_list：", r_list)
+        # print("第", current_lot, "个时间帧内r_list：", r_list)
         totallantency_singleframe = min(r_list)
-        print("第",current_lot,"个时间帧内最优总时延：",totallantency_singleframe)
+        # print("第",current_lot,"个时间帧内最优总时延：",totallantency_singleframe)
+
+        
+        optimal_m = final_m   #最优解是optimal_m！！！
+        # print("第",current_lot,"个时间帧,最优的可行解是：", optimal_m)
 
         # 3000个时间帧的总时延
         totallantency_final += totallantency_singleframe
-
-
-        optimal_m = final_m   #最优解是optimal_m！！！
-        print("第",current_lot,"个时间帧,最优的可行解是：", optimal_m)
-
 
         #for index in local_list:
         final_m = np.delete(final_m,local_list)
@@ -421,14 +418,14 @@ def EAOO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
         K_his.append(K)
         # mode_his.append(m_list[np.argmax(r_list)])
 
-        #print("第 ",current_lot,"个时间帧为止，累计总时延是：",totallantency_final)
+        # print("第 ",current_lot,"个时间帧为止，累计总时延是：",totallantency_final)
 
     total_time = time.time() - start_time
     # mem.plot_cost()
     # plot_rate(rate_his_ratio)
     #
-    # print(N, '个 WDs',"算法停止的时间帧(0-2999):", stop_time)
-    print("本轮（3000个时间帧），最优总时延是,", totallantency_final)
+    print(N, '个 WDs',"算法停止的时间帧(0-2999):", stop_time)
+    # print("本轮（3000个时间帧），最优总时延是,", totallantency_final)
     # print("本轮（3000个时间帧）为止，单个时间帧最优总时延平均值是,", totallantency_final/stop_time)
 
     #print(n, "个时间帧的总时延是：", totallantency_final)
