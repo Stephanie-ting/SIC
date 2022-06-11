@@ -128,7 +128,7 @@ def plot_time_B(EAOOSIC_filename, EAOO_filename, DROO_filename, local_filename, 
     legend_font = {"family": "Times New Roman"}
     #plt.legend(prop=legend_font)
     plt.legend(loc='lower left', prop=legend_font, edgecolor='black')
-    # plt.savefig('./B-TimeDelay.eps', format='eps', dpi=1000)
+    plt.savefig('./B-TimeDelay.eps', format='eps', dpi=1000)
     plt.show()
 
 def plot_time_D(EAOOSIC_filename, EAOO_filename, DROO_filename, local_filename, x_value):
@@ -185,7 +185,7 @@ def plot_time_D(EAOOSIC_filename, EAOO_filename, DROO_filename, local_filename, 
                    }
     # plt.legend(prop=legend_font)
     plt.legend(loc='upper left', prop=legend_font, edgecolor='black')
-    # plt.savefig('./B-TimeDelay.eps', format='eps', dpi=1000)
+    plt.savefig('./MinData-TimeDelay.eps', format='eps', dpi=1000)
     plt.show()
 
 def CPU_time():
@@ -222,7 +222,7 @@ def CPU_time():
     ax.yaxis.set_major_locator(y_major_locator)
     # 把y轴的主刻度设置为10的倍数
     plt.xlim(10, 31)
-    plt.ylim(0, 160)
+    plt.ylim(0, 80)
     plt.grid()
     font_style = {'family': 'Times New Roman',
                   'weight': 'normal',
@@ -294,7 +294,7 @@ def plot_time_R(EAOOSIC_filename, EAOO_filename, DROO_filename, local_filename, 
                    }
     # plt.legend(prop=legend_font)
     plt.legend(loc='upper left', prop=legend_font, edgecolor='black')
-    # plt.savefig('./B-TimeDelay.eps', format='eps', dpi=1000)
+    plt.savefig('./MinLocal-TimeDelay.eps', format='eps', dpi=1000)
     plt.show()
 
 
