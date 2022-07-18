@@ -72,7 +72,7 @@ def plot_rate(rate_his, rolling_intv=80):
     plt.show()
 
 
-def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
+def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2.0):
     wireless_devices, location = create_wireless_device(N_, 1, 1, 0.2, 0.35, 0.1)
     server = Server((location[0] + location[1]) / 2, (location[2] + location[3]) / 2)
     m_list_all = get_all_w(N_)
@@ -98,6 +98,11 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
         with open(file_path, 'w') as f:
             for rate in rate_his:
                 f.write("%s \n" % rate)
+
+    def minMaxScale(data: np.array) -> np.array:
+        Min = np.min(data)
+        Max = np.max(data)
+        return (data - Min) / (Max - Min)
 
     # * 下面为一些参数，这些需要自己设置
 
@@ -162,6 +167,15 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
     P = P_[0, :].tolist()[0]
     f_i = f_i_[0, :].tolist()[0]
     E_min = E_min_[0, :].tolist()[0]
+    E_i = E_i_[0, :].tolist()[0]
+    g_i = g_i_[0, :].tolist()[0]
+
+    ## 最大最小值归一化以获得更好的训练
+    E_i_list_scaled = minMaxScale(E_i_)
+    h_list_scaled = minMaxScale(channel)
+    D_i_list_scaled = minMaxScale(D_i_list_)
+
+    E_i_scaled = E_i_list_scaled[0, :].tolist()[0]
 
     stop_time = n - 1  # * 算法在哪个时间帧停止
 
@@ -199,6 +213,10 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
         h0 = channel0[0, :]  # 判断是否超过一个时间帧用原始信道增益计算
         local_list = []  # 确定本地执行无线设备下标
         # E_min = E_min_[i, :].tolist()[0]
+        D_i_list = D_i_list_[i, :].tolist()[0]
+        # 获取输入数据的归一化值，用于神经网络
+        D_i_scaled = D_i_list_scaled[i, :].tolist()[0]
+        h_scaled = h_list_scaled[0, :]
 
         T = T_  # 时间帧的长度
         B = B_  # 通信带宽
@@ -227,12 +245,9 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
         E_min_rec = []
         q_list_local = []
 
-        D_i_list = D_i_list_[i, :].tolist()[0]
 
-        E_i = E_i_[i, :].tolist()[0]
 
-        # CPU周期
-        g_i = g_i_[i, :].tolist()[0]
+
 
         # print("时间帧",current_lot,"的f_i是:", f_i)
 
@@ -295,7 +310,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
         mutation_pos = [n1 for n1 in range(N1)]
         # the action selection must be either 'OP' or 'KNN'
         # 传入三个参数信道增益 任务量 电量
-        m_list = mem.decode(h, E_i, D_i_list, local_list, N1, decoder_mode)
+        m_list = mem.decode(h_scaled, E_i_scaled, D_i_scaled, local_list, N1, decoder_mode)
         # print(N1)
         ga.s = copy.deepcopy(m_list)
         # print(ga.s)
@@ -315,7 +330,8 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
                     up_devices.append(wireless_devices[m_idx])
                 else:
                     if D_i_list[m_idx] == 0:
-                        q_temp = flagWD[m_idx]
+                        # q_temp = flagWD[m_idx]
+                        q_temp = 0
                     else:
                         q_temp = D_i_list[m_idx] * g_i[m_idx] / f_i[m_idx]
                     local_lantency += q_temp
@@ -325,8 +341,10 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
             for lst in split_list:  # [[1,2,3],[4,6],[7]]
                 up_time = 0  # 每个分组中最大的上传时延
                 for id in lst:  # [1,2,3]
-                    if D_i_list[id] == 0 or uploadrecord_ori[id] == 0:
-                        up_time_temp = flagWD[id]
+                    # if D_i_list[id] == 0 or uploadrecord_ori[id] == 0:
+                    if D_i_list[id] == 0:
+                        # up_time_temp = flagWD[id]
+                        up_time_temp = 0
                     else:
                         up_time_temp = uploadrecord_ori[id]
                     up_time = max(up_time, up_time_temp)
@@ -482,40 +500,41 @@ if __name__ == "__main__":
     All_latency_list = []   # 遍历情况的
 
     B_ = 30
-    T_ = 0.85
+    T_ = 1
     # Ps_ = 50
-    for N in range(10, 32, 2):
-        n = 3000
 
-        E_min = np.mat(abs(np.random.uniform(low=10.0, high=20.0, size=1 * N)).reshape(1, N))
-        # 无线设备传输功率
-        # tips:固定成n个基础值
-        P = np.mat(abs(np.random.uniform(low=0.5, high=0.6, size=1 * N)).reshape(1, N))
-        # 计算速率 均匀分布 50-100 [N*1]
-        # f_i = np.mat(abs(np.random.uniform(low=80, high=100, size=1 * N)).reshape(1, N))
-        f_i = np.mat(abs(np.random.uniform(low=150, high=200, size=1 * N)).reshape(1, N))
+    N = 10
+    n = 3000
 
-        # E_i = np.mat(abs(np.random.normal(loc=23.0, scale=5.0, size=n * N)).reshape(n, N))
-        # tips:固定成n个基础值 初始电量[N*1]
-        E_i = np.mat(abs(np.random.uniform(low=500.0, high=600.0, size=n * N)).reshape(n, N))
-        # g_i = np.mat(abs(np.random.uniform(low=1.5, high=2.5, size=1 * N)).reshape(1, N))
-        # 均匀分布 2-3 np.random.uniform   [N*1]
-        g_i = np.mat(abs(np.random.uniform(low=2, high=3, size=n * N)).reshape(n, N))
-        # 任务数据量 均匀分布 50-100 [N*n]
-        D_i_list = np.mat(abs(np.random.uniform(low=50, high=150, size=n * N)).reshape(n, N))
+    E_min = np.mat(abs(np.random.uniform(low=10.0, high=20.0, size=1 * N)).reshape(1, N))
+    # 无线设备传输功率
+    # tips:固定成n个基础值
+    P = np.mat(abs(np.random.uniform(low=0.5, high=0.6, size=1 * N)).reshape(1, N))
+    # 计算速率 均匀分布 50-100 [N*1]
+    # f_i = np.mat(abs(np.random.uniform(low=80, high=100, size=1 * N)).reshape(1, N))
+    f_i = np.mat(abs(np.random.uniform(low=150, high=200, size=1 * N)).reshape(1, N))
 
-        # EAOO-SIC算法
-        EAOOSIC_time, EAOOSIC_latency, stop_time_sic, latency_res_all = EAOO_latest(N, n, E_min, P, E_i, D_i_list, f_i, g_i, B_, T_)
-        EAOOSIC_latency_average = EAOOSIC_latency / (stop_time_sic + 1)  # * 获得具体停止的时间帧stop_time，根据改时间帧得到平均lantency
-        EAOOSIC_latency_list.append(EAOOSIC_latency_average)
-        EAOOSIC_time_list.append(EAOOSIC_time)
+    # E_i = np.mat(abs(np.random.normal(loc=23.0, scale=5.0, size=n * N)).reshape(n, N))
+    # tips:固定成n个基础值 初始电量[N*1]
+    E_i = np.mat(abs(np.random.uniform(low=500.0, high=600.0, size=n * N)).reshape(n, N))
+    # g_i = np.mat(abs(np.random.uniform(low=1.5, high=2.5, size=1 * N)).reshape(1, N))
+    # 均匀分布 2-3 np.random.uniform   [N*1]
+    g_i = np.mat(abs(np.random.uniform(low=2, high=3, size=n * N)).reshape(n, N))
+    # 任务数据量 均匀分布 50-100 [N*n]
+    D_i_list = np.mat(abs(np.random.uniform(low=50, high=150, size=n * N)).reshape(n, N))
 
-        latency_res_all_average = latency_res_all / (stop_time_sic + 1)
-        All_latency_list.append(latency_res_all_average)
+    # EAOO-SIC算法
+    EAOOSIC_time, EAOOSIC_latency, stop_time_sic, latency_res_all = EAOO_latest(N, n, E_min, P, E_i, D_i_list, f_i, g_i, B_, T_)
+    EAOOSIC_latency_average = EAOOSIC_latency / (stop_time_sic + 1)  # * 获得具体停止的时间帧stop_time，根据改时间帧得到平均lantency
+    EAOOSIC_latency_list.append(EAOOSIC_latency_average)
+    EAOOSIC_time_list.append(EAOOSIC_time)
 
-        print("时延为：", EAOOSIC_latency_average)
-        print("遍历latency和 / EAOO latency和 = %.4f / %.4f = %.4f" %
-              (latency_res_all, EAOOSIC_latency, latency_res_all / EAOOSIC_latency))
+    latency_res_all_average = latency_res_all / (stop_time_sic + 1)
+    All_latency_list.append(latency_res_all_average)
+
+    print("时延为：", EAOOSIC_latency_average)
+    print("遍历latency和 / EAOO latency和 = %.4f / %.4f = %.4f" %
+          (latency_res_all, EAOOSIC_latency, latency_res_all / EAOOSIC_latency))
 
     print('------EAOO-SIC-----')
     print("EAOOSIC_time of  each 10-30 devices", EAOOSIC_time_list)

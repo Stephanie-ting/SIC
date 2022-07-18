@@ -1,30 +1,3 @@
-# coding=utf8
-#  #################################################################
-#  Deep Reinforcement Learning for Online Ofﬂoading in Wireless Powered Mobile-Edge Computing Networks
-#
-#  This file contains the main code of DROO. It loads the training samples saved in ./data/data_#.mat, splits the samples into two parts (training and testing data constitutes 80% and 20%), trains the DNN with training and validation samples, and finally tests the DNN with test data.
-#
-#  Input: ./data/data_#.mat
-#    Data samples are generated according to the CD method presented in [2]. There are 30,000 samples saved in each ./data/data_#.mat, where # is the user number. Each data sample includes
-#  -----------------------------------------------------------------
-#  |       wireless channel gain           |    input_h            |
-#  -----------------------------------------------------------------
-#  |       computing mode selection        |    output_mode        |
-#  -----------------------------------------------------------------
-#  |       energy broadcasting parameter   |    output_a           |
-#  -----------------------------------------------------------------
-#  |     transmit time of wireless device  |    output_tau         |
-#  -----------------------------------------------------------------
-#  |      weighted sum computation rate    |    output_obj         |
-#  -----------------------------------------------------------------
-#
-#
-#  References:
-#  [1] 1. Liang Huang, Suzhi Bi, and Ying-Jun Angela Zhang, "Deep Reinforcement Learning for Online Offloading in Wireless Powered Mobile-Edge Computing Networks," in IEEE Transactions on Mobile Computing, early access, 2019, DOI:10.1109/TMC.2019.2928811.
-#  [2] S. Bi and Y. J. Zhang, “Computation rate maximization for wireless powered mobile-edge computing with binary computation ofﬂoading,” IEEE Trans. Wireless Commun., vol. 17, no. 6, pp. 4177-4190, Jun. 2018.
-#
-# version 1.0 -- July 2018. Written by Liang Huang (lianghuang AT zjut.edu.cn)
-#  #################################################################
 import itertools
 import math
 import scipy.io as sio  # import scipy.io for .mat file I/
@@ -149,17 +122,13 @@ def EAOO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
     k_idx_his = []
     K_his = []
     print('The algorithm EAOO with', N, 'WDs begin.')
-    # P = P_[0, :].tolist()
-    # E_i = E_i_[0, :].tolist()
-    # #eh_i = eh_i_[0, :].tolist()[0]
-    # # 计算速率
-    # f_i = f_i_[0, :].tolist()[0]
-    # # CPU周期
-    # g_i = g_i_[0, :].tolist()
-    # E_min = E_min_[0, :].tolist()
+
     P = P_[0, :].tolist()[0]
     f_i = f_i_[0, :].tolist()[0]
     E_min = E_min_[0, :].tolist()[0]
+    E_i = E_i_[0, :].tolist()[0]
+    # CPU周期
+    g_i = g_i_[0, :].tolist()[0]
 
     stop_time = n - 1   #* 算法在哪个时间帧停止
 
@@ -170,7 +139,7 @@ def EAOO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
     #遍历每一个时间帧
     for i in range(n):
 
-
+        # f_i = f_i_[i, :].tolist()[0]
         current_lot = i
         #print("第", current_lot, "个时间开始：")
 
@@ -201,13 +170,8 @@ def EAOO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
         T = T_  # 时间帧的长度
         B = B_  # 通信带宽
         N_0 = 1e-10  # 接收端噪声功率
-        # 初始电量
-        # 所有无线设备总剩余能量
-        #Ps = Ps_  # 服务器P
-        amin = 1e-27
-        # 本地
-        # 进行判断，数据上传时间大于一个时间帧，不适宜边缘计算
 
+        amin = 1e-27
 
         C_local_ori = []
         C_up_ori = []
@@ -224,15 +188,8 @@ def EAOO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
         C_up_rec = []
         C_local_rec = []
         E_min_rec = []
-        q_list_local = []
 
         D_i_list = D_i_list_[i, :].tolist()[0]
-
-        E_i = E_i_[i, :].tolist()[0]
-
-
-        # CPU周期
-        g_i = g_i_[i, :].tolist()[0]
 
         # print("时间帧", current_lot, "的f_i是:", f_i)
 
@@ -243,19 +200,15 @@ def EAOO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
                 flagWD[fl] -= T  # 本轮执行完后所需的时间帧数减一
         #tempupload = []
 
-        local_lantency = 0  # 精简掉的设备的时延
 
         for index in range(N):
-            # 精简时w=1分析能量约束
-            #H_get = getH(1, T, h0[index], Ps, eh_i[index])
-            #help_lamta = helplamta(T, h0[index], Ps, eh_i[index])
-            # D_i.append(np.mean(D_i_list))
+
             C_up_E = P[index] * dataUpload(B, P[index], h0[index], N_0, D_i_list[index])
             C_up_ori.append(C_up_E)
             # 数据上传时延超出一个时间帧 或者 能耗超出当前电量
             uploadrecord = dataUpload(B, P[index], h0[index], N_0, D_i_list[index])  # 记录设备的数据上传时延
-
             uploadrecord_ori.append(uploadrecord)
+
             C_local = localEnergyCost(amin, f_i[index], D_i_list[index], g_i[index])
             C_local_ori.append(C_local)
 
@@ -336,18 +289,18 @@ def EAOO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
             for index in local_list:
                 m_list[j] = np.insert(m_list[j], index, 0)
 
-        m_list_lantency = []
+        # m_list_lantency = []
         # * 可行性分析
         for m in m_list:
-            # 补全变量后，各决策变量的总时延  #todo 修改了这里，你看一下对不对
+            # 补全变量后，单个决策变量的总时延
             m_lantency = 0
 
             # print("此时的m：",m)
             for id in range(len(m)):
+                m_temp = 0
                 #time_limit  += m[id] * uploadrecord_ori[id]
-                if D_i_list[id] == 0 or uploadrecord_ori[id] == 0:
-                    m_temp = flagWD[id]
-                else:
+                if D_i_list[id] != 0:
+                    # m_temp = flagWD[id]
                     m_temp = m[id] * uploadrecord_ori[id] + (1 - m[id]) * (D_i_list[id] * g_i[id] / f_i[id])
                 # print("每个设备的m_temp:",m_temp)
                 m_lantency += m_temp
@@ -359,17 +312,23 @@ def EAOO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
                 for i in range(len(m)):
                     energy_limit = E_i[i] - ((1 - m[i]) * C_local_ori[i] + m[i] * C_up_ori[i])
                     if energy_limit < E_min[i]:
-                            break
+                         break
                 else:
                     m_list_true.append(m.tolist())
-                    m_list_lantency.append(m_lantency)
+                    r_list.append(m_lantency)
+
+            # # 能量约束计算
+            # energy_limit = 0
+            # for i in range(len(m)):
+            #     energy_limit = E_i[i] - ((1 - m[i]) * C_local_ori[i] + m[i] * C_up_ori[i])
+            #
+            # # 约束条件判断
+            # if (energy_limit >= E_min[i]) and (analysemiu(m, uploadrecord_ori, T) >= 0):
+            #     m_list_true.append(m.tolist())
+            #     r_list.append(m_lantency)
         #print("可行解有：", m_list_true)
 
 
-        #计算其他可行解的时延
-        for i in range(len(m_list_lantency)):
-            r_list.append(m_list_lantency[i])
-        # print("各个可行解的奖励：", r_list)
         final_m = m_list_true[np.argmin(r_list)]   # 从可行决策变量中选取时延最小的
         # print("第", current_lot, "个时间帧内r_list：", r_list)
         totallantency_singleframe = min(r_list)

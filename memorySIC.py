@@ -45,7 +45,6 @@ class MemoryDNN:
         tf.reset_default_graph()
 
         # initialize zero memory [h, m]
-        # self.memory = np.zeros((self.memory_size, self.net[0] + self.net[-1] + self.net[0] + self.net[0] + 1))
         self.memory = np.zeros((self.memory_size, self.net[0] + self.net[-1] ))
 
         # construct memory network
@@ -96,15 +95,12 @@ class MemoryDNN:
             self.loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=self.m, logits=self.m_pred))
         # adam参数在这里修改
         with tf.variable_scope('train'):
-            self._train_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=0.9, epsilon=1e-5).minimize(self.loss)
+            self._train_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=0.09,beta2 = 0.9, epsilon=1e-8).minimize(self.loss)
             # self._train_op = tf.train.AdamOptimizer(self.lr, 0.09).minimize(self.loss)
 
     def remember(self, h, E_i, D_i, m):
         # replace the old memory with new memory
         idx = self.memory_counter % self.memory_size
-        #for i in index_list:
-        #    m = np.insert(m, i, 0)
-        # self.memory[idx, :] = np.hstack((h, m, D_i, E_i, w))
         self.memory[idx, :] = np.hstack((h, D_i, E_i, m))
         self.memory_counter += 1
 

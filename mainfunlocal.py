@@ -1,30 +1,3 @@
-#  #################################################################
-#  Deep Reinforcement Learning for Online Ofﬂoading in Wireless Powered Mobile-Edge Computing Networks
-#
-#  This file contains the main code of DROO. It loads the training samples saved in ./data/data_#.mat, splits the samples into two parts (training and testing data constitutes 80% and 20%), trains the DNN with training and validation samples, and finally tests the DNN with test data.
-#
-#  Input: ./data/data_#.mat
-#    Data samples are generated according to the CD method presented in [2]. There are 30,000 samples saved in each ./data/data_#.mat, where # is the user number. Each data sample includes
-#  -----------------------------------------------------------------
-#  |       wireless channel gain           |    input_h            |
-#  -----------------------------------------------------------------
-#  |       computing mode selection        |    output_mode        |
-#  -----------------------------------------------------------------
-#  |       energy broadcasting parameter   |    output_a           |
-#  -----------------------------------------------------------------
-#  |     transmit time of wireless device  |    output_tau         |
-#  -----------------------------------------------------------------
-#  |      weighted sum computation rate    |    output_obj         |
-#  -----------------------------------------------------------------
-#
-#
-#  References:
-#  [1] 1. Liang Huang, Suzhi Bi, and Ying-Jun Angela Zhang, "Deep Reinforcement Learning for Online Offloading in Wireless Powered Mobile-Edge Computing Networks," in IEEE Transactions on Mobile Computing, early access, 2019, DOI:10.1109/TMC.2019.2928811.
-#  [2] S. Bi and Y. J. Zhang, “Computation rate maximization for wireless powered mobile-edge computing with binary computation ofﬂoading,” IEEE Trans. Wireless Commun., vol. 17, no. 6, pp. 4177-4190, Jun. 2018.
-#
-# version 1.0 -- July 2018. Written by Liang Huang (lianghuang AT zjut.edu.cn)
-#  #################################################################
-
 
 import scipy.io as sio  # import scipy.io for .mat file I/
 import numpy as np  # import numpy
@@ -38,13 +11,10 @@ def EAOO_local(N_, n_, E_min_, E_i_, D_i_list_, f_i_, g_i_, B, T_=2):
 
     N = N_  # number of users
     n = n_  # number of time frames
-
     T = T_
 
     amin = 1e-27
-    flagWD = [0 for index in range(N)]
-    # print('#user = %d, #channel=%d, K=%d, decoder = %s, Memory = %d, Delta = %d'%(N,n,K,decoder_mode, Memory, Delta))
-    # Load data
+
     if N in [5, 6, 7, 8, 9, 10, 20, 30]:
         channel0 = sio.loadmat('./data/data_%d' % N)['input_h']
         # rate = sio.loadmat('./data/data_%d' % N)['output_obj']  # this rate is only used to plot figures; never used to train DROO.
@@ -60,24 +30,20 @@ def EAOO_local(N_, n_, E_min_, E_i_, D_i_list_, f_i_, g_i_, B, T_=2):
     start_time = time.time()
 
     print('The algorithm Local with', N, 'WDs begin.')
-    # 初始能量
-    # E_i = E_i_[0, :].tolist()
-    # # 计算速率
-    # f_i = f_i_[0, :].tolist()[0]
-    # # CPU周期
-    # g_i = g_i_[0, :].tolist()
-    # E_min = E_min_[0, :].tolist()
 
     f_i = f_i_[0, :].tolist()[0]
     E_min = E_min_[0, :].tolist()[0]
+    E_i = E_i_[0, :].tolist()[0]
+    g_i = g_i_[0, :].tolist()[0]
 
-    WD_m = [0 for num in range(N)]
+    flagWD = [0 for fl in range(N)]
     totallantency = 0
     # print('The function all WDs execute local with', N, 'WDs begin.')
 
     E_flag = False  # * 如果能力不足了就break
     stop_time = n - 1  # * 算法在哪个时间帧停止
     for i in range(n):
+        # f_i = f_i_[i, :].tolist()[0]
 
         if i % (n // 10) == 0:
             pass
@@ -89,23 +55,14 @@ def EAOO_local(N_, n_, E_min_, E_i_, D_i_list_, f_i_, g_i_, B, T_=2):
             # test
             i_idx = i - n + num_test + split_idx
 
-        h = channel[i_idx, :]
-        h0 = channel0[i_idx, :]
-
         D_i_list = D_i_list_[i, :].tolist()[0]
-        E_i = E_i_[i, :].tolist()[0]
-        g_i = g_i_[i, :].tolist()[0]
-
 
         for fl in range(N):  # 上轮该无线设备未执行完任务，本轮不予分配新的任务
             if flagWD[fl] > T:
                 D_i_list[fl] = 0
                 flagWD[fl] -= T  # 本轮执行完后所需的时间帧数减
 
-
-        # 各无线设备能量更新
         for index in range(N):
-
             C_local = localEnergyCost(amin, f_i[index], D_i_list[index], g_i[index])
 
             if E_i[index] < E_min[index]:
@@ -119,10 +76,7 @@ def EAOO_local(N_, n_, E_min_, E_i_, D_i_list_, f_i_, g_i_, B, T_=2):
 
             if D_i_list[index] != 0:
                 flagWD[index] = D_i_list[index] * g_i[index] / f_i[index]
-                temp_latency = D_i_list[index] * g_i[index] / f_i[index]
-            else:
-                temp_latency = flagWD[index]
-            totallantency += temp_latency
+                totallantency += D_i_list[index] * g_i[index] / f_i[index]
 
         if E_flag:
             break

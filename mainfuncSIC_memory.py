@@ -73,7 +73,7 @@ def plot_rate(rate_his, rolling_intv=50):
     plt.show()
 
 
-def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2, Ps_=50, memory_=1024):
+def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2, memory_=1024):
     wireless_devices, location = create_wireless_device(N_, 1, 1, 0.2, 0.35, 0.1)
     server = Server((location[0] + location[1]) / 2, (location[2] + location[3]) / 2)
 
@@ -97,6 +97,11 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2, Ps_
         with open(file_path, 'w') as f:
             for rate in rate_his:
                 f.write("%s \n" % rate)
+
+    def minMaxScale(data: np.array) -> np.array:
+        Min = np.min(data)
+        Max = np.max(data)
+        return (data - Min) / (Max - Min)
 
     # * 下面为一些参数，这些需要自己设置
 
@@ -130,10 +135,10 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2, Ps_
 
     split_idx = int(.8 * len(channel))
     num_test = min(len(channel) - split_idx, n - int(.8 * n))  # training data size
-    lr = 1e-5  # 学习率
+    lr = 0.0001  # 学习率
     mem = MemoryDNN(net=[N * 3, 120, 80, N],
                     learning_rate=lr,
-                    training_interval=7,
+                    training_interval=5,
                     batch_size=128,
                     memory_size=Memory
                     )
@@ -163,6 +168,12 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2, Ps_
     stop_time = n - 1  # * 算法在哪个时间帧停止
 
     E_flag = False  # * 如果能力不足了就break
+
+    ## 最大最小值归一化以获得更好的训练
+    E_i_list_scaled = minMaxScale(E_i_)
+    D_i_list_scaled = minMaxScale(D_i_list_)
+    h_list_scaled = minMaxScale(channel)
+
 
     # lowrate_ = lowrate   #*测试
     # print("本轮的minLocal Rate的最小值是：",lowrate_)
@@ -228,6 +239,11 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2, Ps_
 
         E_i = E_i_[i, :].tolist()[0]
 
+        # 获取输入数据的归一化值，用于神经网络
+        D_i_scaled = D_i_list_scaled[i, :].tolist()[0]
+        E_i_scaled = E_i_list_scaled[i, :].tolist()[0]
+        h_scaled = h_list_scaled[0, :]
+
         # CPU周期
         g_i = g_i_[i, :].tolist()[0]
 
@@ -292,7 +308,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2, Ps_
         mutation_pos = [n1 for n1 in range(N1)]
         # the action selection must be either 'OP' or 'KNN'
         # 传入三个参数信道增益 任务量 电量
-        m_list = mem.decode(h, E_i, D_i_list, local_list, N1, decoder_mode)
+        m_list = mem.decode(h_scaled, E_i_scaled, D_i_scaled, local_list, N1, decoder_mode)
         # print(N1)
         ga.s = copy.deepcopy(m_list)
         # print(ga.s)
@@ -416,7 +432,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2, Ps_
                 E_i[index] -= C_up_E
 
         # encode the mode with largest reward
-        mem.encode(h, E_i, D_i_list, optimal_m)  # *w
+        mem.encode(h_scaled, E_i_scaled, D_i_scaled, optimal_m)  # *w
         # the main code for DROO training ends here
 
         # the following codes store some interested metrics for illustrations

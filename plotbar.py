@@ -19,8 +19,8 @@ def plot_time_n(EAOOSIC_filename,EAOO_filename, DROO_filename, local_filename, x
     DROO = load_data(DROO_filename)
     local = load_data(local_filename)
     # 设置刻度范围
-    plt.xlim(9, 31)
-    plt.ylim(0, 40)
+    plt.xlim(9, 32)
+    plt.ylim(0, 45)
     # 设置刻度字体大小
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
@@ -93,6 +93,14 @@ def plot_time_B(EAOOSIC_filename, EAOO_filename, DROO_filename, local_filename, 
              }
     total_width, n = 1.39, 4
     width = total_width / n
+    # 设置刻度范围
+    plt.xlim(9, 31,2)
+    plt.ylim(0, 7,1)
+    # 设置刻度字体大小
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    # plt.grid()
+    plt.grid(zorder=0)
 
     for i in range(len(x_interval)):
         x_interval[i] = x_interval[i] * 1.0 - width
@@ -125,8 +133,8 @@ def plot_time_B(EAOOSIC_filename, EAOO_filename, DROO_filename, local_filename, 
     # 把y轴的主刻度设置为10的倍数
     plt.xlabel(xlabel, font2)
     plt.ylabel(ylabel, font2)
-    legend_font = {"family": "Times New Roman"}
-    #plt.legend(prop=legend_font)
+    legend_font = {"family": "Times New Roman", 'weight': 'normal'}
+    # plt.legend(prop=legend_font)
     plt.legend(loc='lower left', prop=legend_font, edgecolor='black')
     plt.savefig('./B-TimeDelay.eps', format='eps', dpi=1000)
     plt.show()
@@ -144,8 +152,16 @@ def plot_time_D(EAOOSIC_filename, EAOO_filename, DROO_filename, local_filename, 
              'weight': 'normal',
              'size': 10,
              }
-    total_width, n = 7, 4
+    # 设置刻度范围
+    plt.xlim(10, 215, 20)
+    plt.ylim(0, 9, 1)
+    total_width, n = 15, 4
     width = total_width / n
+    # 设置刻度字体大小
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    # plt.grid()
+    plt.grid(zorder=0)
 
     for i in range(len(x_interval)):
         x_interval[i] = x_interval[i] * 1.0 - width
@@ -167,9 +183,9 @@ def plot_time_D(EAOOSIC_filename, EAOO_filename, DROO_filename, local_filename, 
 
     xlabel = 'Minimum Task Data Size (Mb)'
     ylabel = 'Task Accomplishing Time (s)'
-    x_major_locator = MultipleLocator(10)
+    x_major_locator = MultipleLocator(20)
     # 把x轴的刻度间隔设置为1，并存在变量里
-    y_major_locator = MultipleLocator(2.0)
+    y_major_locator = MultipleLocator(1)
     # 把y轴的刻度间隔设置为10，并存在变量里
     ax = plt.gca()
     # ax为两条坐标轴的实例
@@ -181,10 +197,10 @@ def plot_time_D(EAOOSIC_filename, EAOO_filename, DROO_filename, local_filename, 
     plt.ylabel(ylabel, font2)
     legend_font = {"family": "Times New Roman",
                    'weight': 'normal',
-                   'size': 16,
+                   'size': 12,
                    }
     # plt.legend(prop=legend_font)
-    plt.legend(loc='upper left', prop=legend_font, edgecolor='black')
+    plt.legend(loc='lower right', prop=legend_font, edgecolor='black')
     plt.savefig('./MinData-TimeDelay.eps', format='eps', dpi=1000)
     plt.show()
 
@@ -252,9 +268,14 @@ def plot_time_R(EAOOSIC_filename, EAOO_filename, DROO_filename, local_filename, 
              }
     # 设置刻度范围
     plt.xlim(10, 215,20)
-    plt.ylim(0, 30,1)
+    plt.ylim(0, 18,1)
     total_width, n = 15, 4
     width = total_width / n
+    # 设置刻度字体大小
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    # plt.grid()
+    plt.grid(zorder=0)
 
     for i in range(len(x_interval)):
         x_interval[i] = x_interval[i] * 1.0 - width
@@ -290,10 +311,10 @@ def plot_time_R(EAOOSIC_filename, EAOO_filename, DROO_filename, local_filename, 
     plt.ylabel(ylabel, font2)
     legend_font = {"family": "Times New Roman",
                    'weight': 'normal',
-                   'size': 16,
+                   'size': 9,
                    }
     # plt.legend(prop=legend_font)
-    plt.legend(loc='upper left', prop=legend_font, edgecolor='black')
+    plt.legend(loc='upper right', prop=legend_font, edgecolor='black')
     plt.savefig('./MinLocal-TimeDelay.eps', format='eps', dpi=1000)
     plt.show()
 
@@ -309,7 +330,7 @@ if __name__ == '__main__':
     B = [_ for _ in range(10, 32, 2)]
     plot_time_B('./EAOOSIC_B_latency_list.txt','./EAOO_B_latency_list.txt', './DROO_B_latency_list.txt', './local_B_latency_list.txt', B)
 
-    D_min = [_ for _ in range(50, 160, 10)]
+    D_min = [_ for _ in range(20, 220, 20)]
     plot_time_D('./EAOOSIC_minData_latency_list.txt','./EAOO_minData_latency_list.txt', './DROO_minData_latency_list.txt', './local_minData_latency_list.txt', D_min)
 
     R = [_ for _ in range(20, 220, 20)]

@@ -145,17 +145,12 @@ def DROO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
     k_idx_his = []
     K_his = []
     print('The algorithm DROO with', N, 'WDs begin.')
-    # P = P_[0, :].tolist()
-    # E_i = E_i_[0, :].tolist()
-    # #eh_i = eh_i_[0, :].tolist()[0]
-    # # 计算速率
-    # f_i = f_i_[0, :].tolist()[0]
-    # # CPU周期
-    # g_i = g_i_[0, :].tolist()
-    # E_min = E_min_[0, :].tolist()
+
     P = P_[0, :].tolist()[0]
     f_i = f_i_[0, :].tolist()[0]
     E_min = E_min_[0, :].tolist()[0]
+    E_i = E_i_[0, :].tolist()[0]
+    g_i = g_i_[0, :].tolist()[0]
 
     stop_time = n - 1   #* 算法在哪个时间帧停止
 
@@ -165,6 +160,7 @@ def DROO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
 
         current_lot = i
         #print("第", current_lot, "个时间开始：")
+        # f_i = f_i_[i, :].tolist()[0]
 
         if i % (n // 10) == 0:
             pass
@@ -195,71 +191,50 @@ def DROO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
         T = T_  # 时间帧的长度
         B = B_  # 通信带宽
         N_0 = 1e-10  # 接收端噪声功率
-        # 初始电量
-        # 所有无线设备总剩余能量
-        #Ps = Ps_  # 服务器P
-        amin = 1e-27
-        # 本地
-        # 进行判断，数据上传时间大于一个时间帧，不适宜边缘计算
 
+        amin = 1e-27
 
         C_local_ori = []
         C_up_ori = []
         uploadrecord_ori = []
 
-        D_i = []
         upload = []  # 记录决策变量精简后设备的上传时延
         recordD_i = []  # 记录决策变量精简后的处理任务量
         recordf_i = []  # 记录决策变量精简后的本地执行速率
         recordg_i = []  # 记录决策变量精简后执行任务所需cpucycle数
         edge_list = []  # 边缘执行的设备下标
-        #Helplamta_rec = []  # 决策变量精简后设备采集到的能量
+
         E_i_record = []  # 决策变量精简后设备剩余能量
         C_up_rec = []
         C_local_rec = []
         E_min_rec = []
-        q_list_local = []
 
         D_i_list = D_i_list_[i, :].tolist()[0]
 
-        E_i = E_i_[i, :].tolist()[0]
-
-        # CPU周期
-        g_i = g_i_[i, :].tolist()[0]
-
-
-        #Q = []
         for fl in range(N):  # 上轮该无线设备未执行完任务，本轮不予分配新的任务
             if flagWD[fl] > T:
                 D_i_list[fl] = 0
                 flagWD[fl] -= T  # 本轮执行完后所需的时间帧数减一
         #tempupload = []
 
-        local_lantency = 0  # 精简掉的设备的时延
 
         for index in range(N):
-            # 精简时w=1分析能量约束
-            #H_get = getH(1, T, h0[index], Ps, eh_i[index])
-            #help_lamta = helplamta(T, h0[index], Ps, eh_i[index])
-            # D_i.append(np.mean(D_i_list))
+
             C_up_E = P[index] * dataUpload(B, P[index], h0[index], N_0, D_i_list[index])
             C_up_ori.append(C_up_E)
             # 数据上传时延超出一个时间帧 或者 能耗超出当前电量
             uploadrecord = dataUpload(B, P[index], h0[index], N_0, D_i_list[index])  # 记录设备的数据上传时延
-
             uploadrecord_ori.append(uploadrecord)
+
             C_local = localEnergyCost(amin, f_i[index], D_i_list[index], g_i[index])
             C_local_ori.append(C_local)
 
-
             #****此处判断DROO算法是否因当前时间帧 设备的剩余能量  < 设备的最小剩余能量 而停止
-
             if E_i[index] < E_min[index]:
                 stop_time = i
                 stop_time = min(stop_time, i)  # 算法在第 i 个时间帧停止
                 E_flag = True
                 break
-
 
             #决策变量精简，确定为本地执行
             if uploadrecord > T \
@@ -268,8 +243,6 @@ def DROO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
                 # 上个时间帧内任务执行完，更新为该时间帧的时延；未执行完不变，表示剩余时延
                 if D_i_list[index] != 0:
                     flagWD[index] = D_i_list[index] * g_i[index] / f_i[index]
-                # 精简部分时延（确定本地执行）
-                # totallantency_final += D_i_list[index] * g_i[index] / f_i[index]
             else:
                 # 记录决策变量精简后各设备的参数
                 C_up_rec.append(C_up_E)
@@ -302,26 +275,24 @@ def DROO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
         # ga.crossAndMutation(mutation_pos)
         # m_list.extend(ga.s)
         #print("m_list:",m_list)
-        m_list_true = []  # 记录m_list中可行的卸载决策
 
+
+        m_list_true = []  # 记录m_list中可行的卸载决策
 
         # 先补全每个决策变量 m
         for j in range(len(m_list)):
             for index in local_list:
                 m_list[j] = np.insert(m_list[j], index, 0)
 
-
         m_list_lantency = []
         # * 可行性分析
         for m in m_list:
-            # 补全变量后，各决策变量的总时延  #todo 修改了这里，你看一下对不对
+            # 补全变量后，各决策变量的总时延
             m_lantency = 0
 
             for id in range(len(m)):
-                # time_limit  += m[id] * uploadrecord_ori[id]
-                if D_i_list[id] == 0 or uploadrecord_ori[id] == 0:
-                    m_temp = flagWD[id]
-                else:
+                m_temp = 0
+                if D_i_list[id] != 0:
                     m_temp = m[id] * uploadrecord_ori[id] + (1 - m[id]) * (D_i_list[id] * g_i[id] / f_i[id])
                 m_lantency += m_temp
 
@@ -335,6 +306,16 @@ def DROO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
                 else:
                     m_list_true.append(m.tolist())
                     m_list_lantency.append(m_lantency)
+
+            # 能量约束计算
+            # energy_limit = 0
+            # for i in range(len(m)):
+            #     energy_limit = E_i[i] - ((1 - m[i]) * C_local_ori[i] + m[i] * C_up_ori[i])
+            #
+            # # 约束条件判断
+            # if (energy_limit >= E_min[i]) and (analysemiu(m, uploadrecord_ori, T) >= 0):
+            #     m_list_true.append(m.tolist())
+            #     m_list_lantency.append(m_lantency)
 
         #print("可行解有：", m_list_true)
         if len(m_list_true) == 0:
@@ -362,8 +343,6 @@ def DROO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
             for id in range(len(final_m)):
                 if upload[id] != 0 and D_i_list[id] != 0:
                     flagWD[edge_list[id]] = (final_m[id] * upload[id]) + (1 - final_m[id]) * (recordD_i[id] * recordg_i[id] / recordf_i[id])
-                # #加上精简之后的时延
-                # totallantency_final += final_m[id] * upload[id] + (1 - final_m[id]) * (recordD_i[id] * recordg_i[id] / recordf_i[id])
 
             # 各设备进行能量更新
             for index in range(N):
@@ -396,7 +375,6 @@ def DROO_latest_serial(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_
     # plot_rate(rate_his_ratio)
 
     print(N, '个 WDs',"算法停止的时间帧(0-2999):", stop_time)
-
 
     #print(n, "个时间帧的总时延是：", totallantency_final)
     return total_time, totallantency_final, stop_time, disrunnable_times

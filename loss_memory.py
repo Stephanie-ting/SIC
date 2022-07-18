@@ -13,9 +13,9 @@ if __name__ == '__main__':
 
 
     B_ = 30
-    T_ = 0.85
+    T_ = 1.5
     Ps_ = 50
-    memory = [128, 256, 512, 1024, 2048]
+    memory = [64,128, 256, 512, 1024]
     for i in range(len(memory)):
         memory_ = memory[i]
         N = 10

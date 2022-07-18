@@ -24,7 +24,7 @@ if __name__ == "__main__":
     DROO_disrunnable_list = []
 
     B_ = 30
-    T_ = 0.85
+    T_ = 1
 
     for N in range(10, 32, 2):
         n = 3000
@@ -39,10 +39,10 @@ if __name__ == "__main__":
 
         # E_i = np.mat(abs(np.random.normal(loc=23.0, scale=5.0, size=n * N)).reshape(n, N))
         # tips:固定成n个基础值 初始电量[N*1]
-        E_i = np.mat(abs(np.random.uniform(low=500.0, high=600.0, size=n * N)).reshape(n, N))
+        E_i = np.mat(abs(np.random.uniform(low=500.0, high=600.0, size=1 * N)).reshape(1, N))
         # g_i = np.mat(abs(np.random.uniform(low=1.5, high=2.5, size=1 * N)).reshape(1, N))
         # 均匀分布 2-3 np.random.uniform   [N*1]
-        g_i = np.mat(abs(np.random.uniform(low=2, high=3, size=n * N)).reshape(n, N))
+        g_i = np.mat(abs(np.random.uniform(low=2, high=3, size=1 * N)).reshape(1, N))
         # 任务数据量 均匀分布 50-100 [N*n]
         D_i_list = np.mat(abs(np.random.uniform(low=50, high=150, size=n * N)).reshape(n, N))
 
