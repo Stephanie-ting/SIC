@@ -174,7 +174,9 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2):
             i_idx = i - n + num_test + split_idx
 
         h = channel[0, :]
+        # print('channel0\n',channel0.shape)
         h0 = channel0[0, :]  # 判断是否超过一个时间帧用原始信道增益计算
+        # print('h0\n',h0)
         local_list = []  # 确定本地执行无线设备下标
 
 

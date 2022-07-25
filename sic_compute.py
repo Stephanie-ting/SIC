@@ -1,9 +1,8 @@
 import random
 import time
 from typing import List, Any
-
 import matplotlib.pyplot as plt
-
+from generate_h import *
 
 class WirelessDevice:
     def __init__(self, x, y, r, number=-1) -> None:
@@ -26,7 +25,7 @@ def output(devices_with_power: list):
         devices.append(x[0].number)
     return devices
 
-
+# (n, 1, 1, 0.2, 0.35, 0.1)
 def create_wireless_device(n: int, max_location_x: float, max_location_y: float,
                            min_r: float, max_r: float, min_distance: float) -> tuple:
     wireless_devices = []
@@ -129,6 +128,61 @@ def get_all_w(n: int) -> list:
     get_all_w_helper([])
     return res
 
+def sic_h(devices_all: list, server: Server, alpha: float, N0: float, beta: float) -> List[List[Any]]:
+    #h_mean
+    A_d = 4.11
+    d_e = 2.8
+    f_c = 915e6
+    h_mean_list = []
+
+    # devices_with_power用于保存p * h
+    devices_with_power = []
+    for x in devices_all:
+        distance = ((x.x - server.x) ** 2 + (x.y - server.y) ** 2) ** 0.5
+
+        #计算每个h
+        t = 3e8 / (4 * 3.14 * f_c * distance)
+        h_i = A_d * (t ** d_e)
+        h_mean_list.append(h_i)
+        # 将设备和 p * h 以tuple的形式存入到数组中
+        devices_with_power.append((x, x.power * h_i))
+    devices_with_power.sort(key=lambda x: -x[1])
+
+    # 保存有没有被遍历到
+    record_temp = [False] * len(devices_with_power)
+    res = []
+    for k in range(len(devices_with_power)):
+        if record_temp[k]:
+            continue
+        temp = []  # 一个分组
+        for i in range(k, len(devices_with_power)):
+            if record_temp[i]:
+                continue
+            if len(temp) == 0:
+                temp.append(devices_with_power[i])
+                record_temp[i] = True
+            else:
+                temp.append(devices_with_power[i])
+                if sic_help(devices_with_power=temp, alpha=alpha, N0=N0, beta=beta):
+                    record_temp[i] = True
+                else:
+                    temp.pop()
+
+        if len(temp) > 0:
+            res.append(temp)
+
+    split_list = []  # 记录分组情况，存放设备下标index
+    for group in res:  # group :[(,),(,),(,)]
+        group_list = []
+        for group_dev in group:  # group_dev:(x,with power)
+            group_list.append(group_dev[0].number)
+            # print(group_dev[0].number)
+        split_list.append(group_list)
+        # print("-----------")
+
+    # print("分组情况是：", split_list)
+    # return res
+    return split_list
 
 if __name__ == "__main__":
 
@@ -156,8 +210,17 @@ if __name__ == "__main__":
     plt.show()
     start_time = time.time()
     split_list = sic(devices_all=wireless_devices, server=server, alpha=alpha, N0=N0, beta=beta)
+    split_list_h = sic_h(devices_all=wireless_devices, server=server, alpha=alpha, N0=N0, beta=beta)
 
-    print("分组情况是：", split_list)
+    print("sic分组情况是：", split_list)
+    print("sic_h分组情况是：", split_list_h)
     # print("最大并发度为：", res)
     end_time = time.time()
     print("总时间为：", end_time - start_time)
+
+    h_mean_list = cal_mean_h(devices_all=wireless_devices, server=server)
+    print('h_i:',h_mean_list)
+    #h_mean = [2.09586234e-06, 2.78914438e-06, 3.25940045e-06, 2.66778002e-06, 2.05608874e-06, 2.32011316e-06, 2.19657710e-06, 2.47194857e-06, 2.75105669e-06, 2.10990325e-06]
+
+    h_list = generate_h(h_mean_list)
+    # print('h:',h_list)
