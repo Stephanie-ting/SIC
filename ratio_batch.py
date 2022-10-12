@@ -1,7 +1,8 @@
 import numpy as np
 import scipy.io as sio
-from mainfunSIC_MAX_learn import EAOO_latest
+from mainfuncSIC_MAX_batch import EAOO_latest
 from sic_compute import *
+
 def save_to_txt(rate_his, file_path):
     with open(file_path, 'w') as f:
         for rate in rate_his:
@@ -13,13 +14,14 @@ if __name__ == '__main__':
     B_ = 20
     T_ = 0.5
     N = 10
-    learn = [ 0.1,0.01,0.001,0.0001,0.00001]
+    n = 3000
+    batch = [64,128, 256, 512]
     wirelessDevices_, location = create_wireless_device(N, 1, 1, 0.2, 0.35, 0.1)
     server_ = Server((location[0] + location[1]) / 2, (location[2] + location[3]) / 2)
-    for i in range(len(learn)):
-        learn_ = learn[i]
 
-        n = 3000
+    for i in range(len(batch)):
+        batch_ = batch[i]
+
 
         E_min = np.mat(abs(np.random.uniform(low=10.0, high=20.0, size=1 * N)).reshape(1, N))
         # 无线设备传输功率
@@ -36,10 +38,10 @@ if __name__ == '__main__':
         # 均匀分布 2-3 np.random.uniform   [N*1]
         g_i = np.mat(abs(np.random.uniform(low=2, high=3, size=1 * N)).reshape(1, N))
         # 任务数据量 均匀分布 50-100 [N*n]
-        D_i_list = np.mat(abs(np.random.uniform(low=50, high=150, size=n * N)).reshape(n, N))
+        D_i_list = np.mat(abs(np.random.uniform(low=100, high=150, size=n * N)).reshape(n, N))
 
         # EAOO-SIC算法
-        EAOOSIC_time, EAOOSIC_lantency, stop_time_sic,ratio_learn_list = EAOO_latest(N, n, E_min, P, E_i, D_i_list, f_i, g_i, wirelessDevices_, server_, B_, T_,learn_)
+        EAOOSIC_time, EAOOSIC_lantency, stop_time_sic,ratio_batch_list = EAOO_latest(N, n, E_min, P, E_i, D_i_list, f_i, g_i, wirelessDevices_, server_, B_, T_,batch_)
 
-        # save_to_txt(ratio_learn_list, './ratio/learn_EAOOSIC_' + str(learn_) + '.txt')
-        sio.savemat('./ratio/learn_EAOOSIC_' + str(learn[i]) + '.mat',{'ratio_learn_list':ratio_learn_list})
+
+        sio.savemat('./ratio/batch_EAOOSIC_' + str(batch[i]) + '.mat',{'ratio_batch_list':ratio_batch_list})

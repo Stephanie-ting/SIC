@@ -4,7 +4,7 @@ import numpy as np  # import numpy
 import time
 
 
-def EAOO_local(N_, n_, E_min_, E_i_, D_i_list_, f_i_, g_i_, B, T_=2):
+def EAOO_local(N_, n_, E_min_, E_i_, D_i_list_, f_i_, g_i_, B, T_=2,N_0_=1e-10):
 
     def localEnergyCost(a, f_i, D_i, g):
         return 1.0 * a * f_i * f_i * D_i * g

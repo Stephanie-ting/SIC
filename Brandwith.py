@@ -1,9 +1,12 @@
 import numpy as np
-
-from mainfuncEAOO import EAOO_latest_serial
-from mainfuncSIC import EAOO_latest
-from mainfuncDROO import DROO_latest_serial
+# from mainfuncEAOO import EAOO_latest_serial
+from mainfuncEAOO_h import EAOO_latest_serial
+# from mainfuncSIC import EAOO_latest
+from mainfuncSIC_h import EAOO_latest
+# from mainfuncDROO import DROO_latest_serial
+from mainfuncDROO_h import DROO_latest_serial
 from mainfunlocal import EAOO_local
+from sic_compute import *
 
 import scipy.io as sio
 
@@ -19,10 +22,14 @@ if __name__ == '__main__':
     local_B_latency_list = []
     # B_ = 30
     T_ = 1
+    N = 10
+    n = 5000
+
+    wirelessDevices_, location = create_wireless_device(N, 1, 1, 0.2, 0.35, 0.1)
+    server_ = Server((location[0] + location[1]) / 2, (location[2] + location[3]) / 2)
 
     for B in range(10, 32, 2):
-        N = 10
-        n = 5000
+
 
         E_min = np.mat(abs(np.random.uniform(low=10.0, high=20.0, size=1 * N)).reshape(1, N))
         # 无线设备传输功率
@@ -32,18 +39,18 @@ if __name__ == '__main__':
         E_i = np.mat(abs(np.random.uniform(low=500.0, high=600.0, size=1 * N)).reshape(1, N))
         g_i = np.mat(abs(np.random.uniform(low=2, high=3, size=1 * N)).reshape(1, N))
         # 任务数据量 均匀分布 50-100 [N*n]
-        D_i_list = np.mat(abs(np.random.uniform(low=50, high=100, size=n * N)).reshape(n, N))
+        D_i_list = np.mat(abs(np.random.uniform(low=100, high=150, size=n * N)).reshape(n, N))
 
         # EAOO-SIC算法
-        EAOOSIC_time, EAOOSIC_lantency, stop_time_sic = EAOO_latest(N, n, E_min, P, E_i, D_i_list, f_i, g_i, B, T_)
+        EAOOSIC_time, EAOOSIC_lantency, stop_time_sic = EAOO_latest(N, n, E_min, P, E_i, D_i_list, f_i, g_i, wirelessDevices_, server_ ,B, T_)
         EAOOSIC_lantency_average = EAOOSIC_lantency / (stop_time_sic + 1)  # * 获得具体停止的时间帧stop_time，根据改时间帧得到平均lantency
         EAOOSIC_B_latency_list.append(EAOOSIC_lantency_average)
         # EAOO-串行
-        EAOO_time, EAOO_lantency, stop_time_ori = EAOO_latest_serial(N, n, E_min, P, E_i, D_i_list, f_i, g_i, B, T_)
+        EAOO_time, EAOO_lantency, stop_time_ori = EAOO_latest_serial(N, n, E_min, P, E_i, D_i_list, f_i, g_i,  wirelessDevices_, server_, B, T_)
         EAOO_lantency_average = EAOO_lantency / (stop_time_ori + 1)
         EAOO_B_latency_list.append(EAOO_lantency_average)
         # DROO算法
-        DROO_time, DROO_lantency, stop_time_droo, disrunnable_times = DROO_latest_serial(N, n, E_min, P, E_i, D_i_list, f_i, g_i, B, T_)
+        DROO_time, DROO_lantency, stop_time_droo, disrunnable_times = DROO_latest_serial(N, n, E_min, P, E_i, D_i_list, f_i, g_i,  wirelessDevices_, server_, B, T_)
         DROO_lantency_average = DROO_lantency / (stop_time_droo + 1 - disrunnable_times)  # * 获得具体停止的时间帧stop_time，根据改时间帧得到平均lantency
         DROO_B_latency_list.append(DROO_lantency_average)
         # 完全本地
@@ -51,7 +58,7 @@ if __name__ == '__main__':
         local_lantency_average = local_lantency / (stop_time_local + 1)
         local_B_latency_list.append(local_lantency_average)
 
-    save_to_txt(EAOOSIC_B_latency_list, 'EAOOSIC_B_latency_list.txt')
-    save_to_txt(EAOO_B_latency_list, 'EAOO_B_latency_list.txt')
-    save_to_txt(DROO_B_latency_list, 'DROO_B_latency_list.txt')
-    save_to_txt(local_B_latency_list, 'local_B_latency_list.txt')
+    save_to_txt(EAOOSIC_B_latency_list, './brandwith/EAOOSIC_B_latency_list.txt')
+    save_to_txt(EAOO_B_latency_list, './brandwith/EAOO_B_latency_list.txt')
+    save_to_txt(DROO_B_latency_list, './brandwith/DROO_B_latency_list.txt')
+    save_to_txt(local_B_latency_list, './brandwith/local_B_latency_list.txt')

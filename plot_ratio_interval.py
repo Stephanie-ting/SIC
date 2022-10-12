@@ -5,7 +5,7 @@ from matplotlib.ticker import MultipleLocator
 import scipy.io as sio
 
 def load_data(file_name):
-    file = open('./ratio/'+file_name)
+    file = open(file_name)
     time_list = []
     for line in file.readlines():
         line = line.strip()
@@ -14,25 +14,19 @@ def load_data(file_name):
     # print(time_list)
     return time_list
 
-
-def plot_cost_EAOOSIC(learn, color):
+def plot_ratio_EAOOSIC(memory, color):
     import matplotlib.pyplot as plt
-    rolling_intv = 30
-    # plot_lr = [11,22,33,44]
-    plot_lr = [ 0.1,0.01,0.001,0.0001,0.00001]
-    for i in range(len(learn)):
+    rolling_intv = 70
+    for i in range(len(memory)):
         #EAOOSIC_cost = load_data('cost_EAOOSIC_' + str(memory[i]) + '.txt')
-        EAOOSIC_ratio = sio.loadmat('./ratio/learn_EAOOSIC_%d'% plot_lr[i])['ratio_learn_list']
-        # print(str(learn[i]))
-        # EAOOSIC_ratio = load_data('learn_EAOOSIC_' + str(learn[i]) + '.txt')
+        EAOOSIC_ratio = sio.loadmat('./ratio/interval_EAOOSIC_%d' % memory[i])['ratio_interval_list']
         EAOOSIC_ratio = EAOOSIC_ratio[0, :].tolist()
 
         ratio_array = np.asarray(EAOOSIC_ratio)
-
         df = pd.DataFrame(ratio_array)
 
 
-        plt.plot(np.arange(len(ratio_array)) + 1, df.rolling(rolling_intv, min_periods=1).mean(), color=color[i], label= 'learning_rate = '+ str(learn[i]))
+        plt.plot(np.arange(len(ratio_array)) + 1, df.rolling(rolling_intv, min_periods=1).mean(), color=color[i], label= 'Memory size = '+ str(memory[i]))
         # plt.fill_between(np.arange(len(ratio_array)) + 1, df.rolling(rolling_intv, min_periods=1).min()[0],df.rolling(rolling_intv, min_periods=1).max()[0], color='b', alpha=0.2)
         # plt.plot(np.arange(len(EAOOSIC_cost)) * 10, EAOOSIC_cost, color=color[i], label= 'Memory size = '+ str(memory[i]))
     plt.ylabel('SIC Approximation Ratio')
@@ -60,6 +54,6 @@ def plot_cost_EAOOSIC(learn, color):
     plt.show()
 
 if __name__ == '__main__':
-    learn = [ 0.1,0.01,0.001,0.0001,0.00001]
-    color = ['lightseagreen', 'cornflowerblue', 'darkorchid', 'midnightblue', 'cadetblue']
-    plot_cost_EAOOSIC(learn, color)
+    memory = [5,10, 15, 20]
+    color = ['lightseagreen', 'cornflowerblue', 'darkorchid', 'midnightblue']
+    plot_ratio_EAOOSIC(memory, color)

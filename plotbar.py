@@ -95,7 +95,7 @@ def plot_time_B(EAOOSIC_filename, EAOO_filename, DROO_filename, local_filename, 
     width = total_width / n
     # 设置刻度范围
     plt.xlim(9, 31,2)
-    plt.ylim(0, 7,1)
+    plt.ylim(0, 9,1)
     # 设置刻度字体大小
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
@@ -135,7 +135,7 @@ def plot_time_B(EAOOSIC_filename, EAOO_filename, DROO_filename, local_filename, 
     plt.ylabel(ylabel, font2)
     legend_font = {"family": "Times New Roman", 'weight': 'normal'}
     # plt.legend(prop=legend_font)
-    plt.legend(loc='lower left', prop=legend_font, edgecolor='black')
+    plt.legend(loc='upper right', prop=legend_font, edgecolor='black')
     plt.savefig('./B-TimeDelay.eps', format='eps', dpi=1000)
     plt.show()
 
@@ -208,22 +208,24 @@ def CPU_time():
     # cputime
 
     time_delay_EAOOSIC = load_data('./EAOOSIC_time.txt')
-    time_delay_EAOO = load_data('./EAOO_time.txt')
-    time_delay_DROO = load_data('./DROO_time.txt')
-    time_delay_completely_local = load_data('./local_time.txt')
+    # for i in range(len(time_delay_EAOOSIC)):
+    #     time_delay_EAOOSIC[i] /= 3000
+    # time_delay_EAOO = load_data('./EAOO_time.txt')
+    # time_delay_DROO = load_data('./DROO_time.txt')
+    # time_delay_completely_local = load_data('./local_time.txt')
 
     x_list = [_ for _ in range(10, 32, 2)]
 
-    plt.plot(x_list, time_delay_completely_local, label='Completely Local',
-             ls='-', linewidth=2, color='lightseagreen',
-             marker='^', markerfacecolor='skyblue', markersize=6)
-    plt.plot(x_list, time_delay_DROO,
-             ls='-', label='DROO', linewidth=2, color='cornflowerblue',
-             marker='^', markerfacecolor='slateblue', markersize=6)
-    plt.plot(x_list, time_delay_EAOO, label='EAOO',
-             ls='-', linewidth=2, color='darkorchid',
-             marker='^', markerfacecolor='violet', markersize=6)
-    plt.plot(x_list, time_delay_EAOOSIC, label='EAOOSIC',
+    # plt.plot(x_list, time_delay_completely_local, label='Completely Local',
+    #          ls='-', linewidth=2, color='lightseagreen',
+    #          marker='^', markerfacecolor='skyblue', markersize=6)
+    # plt.plot(x_list, time_delay_DROO,
+    #          ls='-', label='DROO', linewidth=2, color='cornflowerblue',
+    #          marker='^', markerfacecolor='slateblue', markersize=6)
+    # plt.plot(x_list, time_delay_EAOO, label='EAOO',
+    #          ls='-', linewidth=2, color='darkorchid',
+    #          marker='^', markerfacecolor='violet', markersize=6)
+    plt.plot(x_list, time_delay_EAOOSIC, label='DSOO',
              ls='-', linewidth=2, color='steelblue',
              marker='^', markerfacecolor='steelblue', markersize=6)
 
@@ -238,7 +240,7 @@ def CPU_time():
     ax.yaxis.set_major_locator(y_major_locator)
     # 把y轴的主刻度设置为10的倍数
     plt.xlim(10, 31)
-    plt.ylim(0, 80)
+    plt.ylim(10, 95)
     plt.grid()
     font_style = {'family': 'Times New Roman',
                   'weight': 'normal',
@@ -267,7 +269,72 @@ def plot_time_R(EAOOSIC_filename, EAOO_filename, DROO_filename, local_filename, 
              'size': 10,
              }
     # 设置刻度范围
-    plt.xlim(10, 215,20)
+    plt.xlim(0, 400,40)
+    plt.ylim(0, 18,1)
+    total_width, n = 40, 4
+    width = total_width / n
+    # 设置刻度字体大小
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    # plt.grid()
+    plt.grid(zorder=0)
+
+    for i in range(len(x_interval)):
+        x_interval[i] = x_interval[i] * 1.0 - width
+    plt.bar(x_interval, EAOOSIC, width=width, alpha=0.9, label='EAOOSIC', fc='steelblue', edgecolor='black', zorder=3)
+
+    for i in range(len(x_interval)):
+        x_interval[i] = x_interval[i] * 1.0 + width
+    plt.bar(x_interval, EAOO, width=width, alpha=0.9, label='EAOO', fc='powderblue', edgecolor='black', zorder=3)
+
+    for i in range(len(x_interval)):
+        x_interval[i] = x_interval[i] * 1.0 + width
+    plt.bar(x_interval, DROO, width=width, label='DROO', alpha=0.9, hatch='', fc='cornflowerblue', edgecolor='black',
+            zorder=3)
+
+    for i in range(len(x_interval)):
+        x_interval[i] = x_interval[i] * 1.0 + width
+    plt.bar(x_interval, local, width=width, alpha=0.9, label='Fully Local Computing', fc='lightseagreen', hatch='',
+            edgecolor='black', zorder=3)
+
+    xlabel = 'Minimum local computing rate (MHz/s)'
+    ylabel = 'Task Accomplishing Time (s)'
+    x_major_locator = MultipleLocator(40)
+    # 把x轴的刻度间隔设置为1，并存在变量里
+    y_major_locator = MultipleLocator(1)
+    # 把y轴的刻度间隔设置为10，并存在变量里
+    ax = plt.gca()
+    # ax为两条坐标轴的实例
+    ax.xaxis.set_major_locator(x_major_locator)
+    # 把x轴的主刻度设置为1的倍数
+    ax.yaxis.set_major_locator(y_major_locator)
+    # 把y轴的主刻度设置为10的倍数
+    plt.xlabel(xlabel, font2)
+    plt.ylabel(ylabel, font2)
+    legend_font = {"family": "Times New Roman",
+                   'weight': 'normal',
+                   'size': 9,
+                   }
+    # plt.legend(prop=legend_font)
+    plt.legend(loc='upper right', prop=legend_font, edgecolor='black')
+    plt.savefig('./MinLocal-TimeDelay.eps', format='eps', dpi=1000)
+    plt.show()
+
+def plot_time_P(EAOOSIC_filename, EAOO_filename, DROO_filename, local_filename, x_value):
+    EAOOSIC = load_data(EAOOSIC_filename)
+    EAOO = load_data(EAOO_filename)
+    DROO = load_data(DROO_filename)
+    local = load_data(local_filename)
+
+    P = x_value
+    x_interval = P
+    # interval and number
+    font2 = {'family': 'Times New Roman',
+             'weight': 'normal',
+             'size': 10,
+             }
+    # 设置刻度范围
+    plt.xlim(1, 10,1)
     plt.ylim(0, 18,1)
     total_width, n = 15, 4
     width = total_width / n
@@ -297,7 +364,7 @@ def plot_time_R(EAOOSIC_filename, EAOO_filename, DROO_filename, local_filename, 
 
     xlabel = 'Minimum local computing rate (MHz/s)'
     ylabel = 'Task Accomplishing Time (s)'
-    x_major_locator = MultipleLocator(20)
+    x_major_locator = MultipleLocator(40)
     # 把x轴的刻度间隔设置为1，并存在变量里
     y_major_locator = MultipleLocator(1)
     # 把y轴的刻度间隔设置为10，并存在变量里
@@ -318,8 +385,6 @@ def plot_time_R(EAOOSIC_filename, EAOO_filename, DROO_filename, local_filename, 
     plt.savefig('./MinLocal-TimeDelay.eps', format='eps', dpi=1000)
     plt.show()
 
-
-
 if __name__ == '__main__':
 
     n = [_ for _ in range(10, 32, 2)]
@@ -328,11 +393,11 @@ if __name__ == '__main__':
     CPU_time()
 
     B = [_ for _ in range(10, 32, 2)]
-    plot_time_B('./EAOOSIC_B_latency_list.txt','./EAOO_B_latency_list.txt', './DROO_B_latency_list.txt', './local_B_latency_list.txt', B)
+    plot_time_B('./brandwith/EAOOSIC_B_latency_list.txt','./brandwith/EAOO_B_latency_list.txt', './brandwith/DROO_B_latency_list.txt', './brandwith/local_B_latency_list.txt', B)
 
     D_min = [_ for _ in range(20, 220, 20)]
-    plot_time_D('./EAOOSIC_minData_latency_list.txt','./EAOO_minData_latency_list.txt', './DROO_minData_latency_list.txt', './local_minData_latency_list.txt', D_min)
+    plot_time_D('./minDi/EAOOSIC_minData_latency_list.txt','./minDi/EAOO_minData_latency_list.txt', './minDi/DROO_minData_latency_list.txt', './minDi/local_minData_latency_list.txt', D_min)
 
-    R = [_ for _ in range(20, 220, 20)]
-    plot_time_R('./EAOOSIC_localrate_latency_list.txt','./EAOO_localrate_latency_list.txt','./DROO_localrate_latency_list.txt','./local_localrate_latency_list.txt',R)
+    R = [_ for _ in range(20, 420, 40)]
+    plot_time_R('./minFi/EAOOSIC_localrate_latency_list.txt','./minFi/EAOO_localrate_latency_list.txt','./minFi/DROO_localrate_latency_list.txt','./minFi/local_localrate_latency_list.txt',R)
 

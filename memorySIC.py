@@ -95,7 +95,7 @@ class MemoryDNN:
             self.loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=self.m, logits=self.m_pred))
         # adam参数在这里修改
         with tf.variable_scope('train'):
-            self._train_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=0.09,beta2 = 0.9, epsilon=1e-8).minimize(self.loss)
+            self._train_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=0.09,beta2 = 0.7, epsilon=1e-8).minimize(self.loss)
             # self._train_op = tf.train.AdamOptimizer(self.lr, 0.09).minimize(self.loss)
 
     def remember(self, h, E_i, D_i, m):

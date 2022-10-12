@@ -5,7 +5,6 @@ from matplotlib.ticker import MultipleLocator
 
 from memorySIC import MemoryDNN
 from getfeasibleSIC import getfeasibleres
-import time
 from GA import GA
 import copy
 from sic_compute import *

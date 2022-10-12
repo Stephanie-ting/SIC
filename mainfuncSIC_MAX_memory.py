@@ -1,14 +1,11 @@
 import math
 import scipy.io as sio  # import scipy.io for .mat file I/
-import numpy as np  # import numpy
 from matplotlib.ticker import MultipleLocator
-
 from memorySIC import MemoryDNN
-from getfeasibleSIC import getfeasibleres
-import time
+from getfeasibleSIC_h import getfeasibleres
 from GA import GA
 import copy
-from sic_compute import *
+from generate_h import *
 
 
 def plot_rate(rate_his, rolling_intv=80):
@@ -44,9 +41,14 @@ def plot_rate(rate_his, rolling_intv=80):
     plt.show()
 
 
-def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2.0,memory_=1024):
-    wireless_devices, location = create_wireless_device(N_, 1, 1, 0.2, 0.35, 0.1)
-    server = Server((location[0] + location[1]) / 2, (location[2] + location[3]) / 2)
+def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, wirelessDevices_, server_, B_=5, T_=2.0, memory_=1024):
+    # wireless_devices, location = create_wireless_device(N_, 1, 1, 0.2, 0.35, 0.1)
+    # server = Server((location[0] + location[1]) / 2, (location[2] + location[3]) / 2)
+    wireless_devices = wirelessDevices_
+    server = server_
+    h_mean_list = cal_mean_h(devices_all=wireless_devices, server=server)
+    h_list = generate_h(h_mean_list)
+
     m_list_all = get_all_w(N_)
     latency_res_all = 0
 
@@ -86,7 +88,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2.0,me
     n = n_  # number of time frames
     K = N  # initialize K = N
     decoder_mode = 'OP'  # the quantization mode could be 'OP' (Order-preserving) or 'KNN'
-    Memory = 512  # capacity of memory structure
+    Memory = memory_  # capacity of memory structure
     Delta = 32  # Update interval for adaptive K
 
     totallantency_final = 0  # * 初始化最终的总时延(3000个时间帧的)
@@ -105,10 +107,14 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2.0,me
         # rate = rate_temp[:, 0:N]
     # increase h to close to 1 for better training; it is a trick widely adopted in deep learning
     channel = channel0 * 1000000
+    # 根据设备位置新生成的信道增益
+    channel_new0 = np.array(h_list)
+    channel_new = channel_new0 * 1000000
 
-
-    split_idx = int(.8 * len(channel))
-    num_test = min(len(channel) - split_idx, n - int(.8 * n))  # training data size
+    # split_idx = int(.8 * len(channel))
+    split_idx = int(.8 * len(channel_new))
+    # num_test = min(len(channel) - split_idx, n - int(.8 * n))  # training data size
+    num_test = min(len(channel_new) - split_idx, n - int(.8 * n))  # training data size
     lr = 1e-4  # 学习率
     mem = MemoryDNN(net=[N * 3, 120, 80, N],
                     learning_rate=lr,
@@ -145,7 +151,8 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2.0,me
     ## 最大最小值归一化以获得更好的训练
     E_i_list_scaled = minMaxScale(E_i_)
     D_i_list_scaled = minMaxScale(D_i_list_)
-    h_list_scaled = minMaxScale(channel)
+    # h_list_scaled = minMaxScale(channel)
+    h_list_scaled = minMaxScale(channel_new)
 
     E_i_scaled = E_i_list_scaled[0, :].tolist()[0]
 
@@ -182,8 +189,14 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2.0,me
             # test
             i_idx = i - n + num_test + split_idx
 
-        h = channel[0, :]
-        h0 = channel0[0, :]  # 判断是否超过一个时间帧用原始信道增益计算
+        h_ori = channel[0, :]
+        h = channel_new[0, :]
+        # print('channel0\n',channel0.shape)
+        h0_ori = channel0[0, :]  # 判断是否超过一个时间帧用原始信道增益计算
+        # print('h0ori\n', h0_ori)
+        h0 = channel_new0[0, :]  # 判断是否超过一个时间帧用原始信道增益计算
+        # print('h0new\n',h0)
+
         local_list = []  # 确定本地执行无线设备下标
         # E_min = E_min_[i, :].tolist()[0]
         D_i_list = D_i_list_[i, :].tolist()[0]
@@ -216,10 +229,6 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2.0,me
         C_up_rec = []
         C_local_rec = []
         E_min_rec = []
-        q_list_local = []
-
-
-
 
         # print("时间帧",current_lot,"的f_i是:", f_i)
 
@@ -282,7 +291,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2.0,me
         mutation_pos = [n1 for n1 in range(N1)]
         # the action selection must be either 'OP' or 'KNN'
         # 传入三个参数信道增益 任务量 电量
-        m_list = mem.decode(h_scaled, E_i_scaled, D_i_scaled, local_list, N1, decoder_mode)
+        m_list = mem.decode(h, E_i, D_i_list,  local_list, N1, decoder_mode)
         # print(N1)
         ga.s = copy.deepcopy(m_list)
         # print(ga.s)
@@ -293,42 +302,10 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2.0,me
         # print("m_list:",m_list)
         m_list_true = []  # 记录保底可行解 + m_list中可行的卸载决策
 
-
-        def split_group_latency(m):
-            up_devices = []
-            local_lantency = 0
-            for m_idx in range(len(m)):  # 先对所有设备进行筛选，m[m_idx]=0的直接计算本地时延之和，m[m_idx]=1的运用sic进行分组
-                if m[m_idx] == 1:
-                    up_devices.append(wireless_devices[m_idx])
-                else:
-                    if D_i_list[m_idx] == 0:
-                        # q_temp = flagWD[m_idx]
-                        q_temp = 0
-                    else:
-                        q_temp = D_i_list[m_idx] * g_i[m_idx] / f_i[m_idx]
-                    local_lantency += q_temp
-            split_list = sic(devices_all=up_devices, server=server, alpha=alpha, N0=N_0, beta=beta)
-
-            up_lantency = 0
-            for lst in split_list:  # [[1,2,3],[4,6],[7]]
-                up_time = 0  # 每个分组中最大的上传时延
-                for id in lst:  # [1,2,3]
-                    # if D_i_list[id] == 0 or uploadrecord_ori[id] == 0:
-                    if D_i_list[id] == 0:
-                        # up_time_temp = flagWD[id]
-                        up_time_temp = 0
-                    else:
-                        up_time_temp = uploadrecord_ori[id]
-                    up_time = max(up_time, up_time_temp)
-                up_lantency += up_time  # 所有的组的最大的上传时延之和
-
-            return up_lantency, local_lantency
-
-
         # 生成一组保底可行解
         feasible_decision = getfeasibleres(edge_list, upload, recordD_i, recordg_i, recordf_i, E_min_rec, C_local_rec,
                                            C_up_rec,
-                                           E_i_record, wireless_devices, server, alpha, N_0, beta, T)
+                                           E_i_record, wireless_devices, server,N_0, beta, T)
         # print("原始生成的保底可行解:", feasible_decision)
 
         # 先补全这个保底的可行解
@@ -337,15 +314,6 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2.0,me
         # print("补全后的保底可行解:", feasible_decision)
         m_list_true.append(feasible_decision)
 
-        # * 计算最大奖励
-        r_list = []  # 记录时延---保底可行解和满足可行性分析的解
-
-        # 计算保底可行解的时延
-        feasible_up, feasible_local = split_group_latency(feasible_decision)
-        feasible_lantency = feasible_up + feasible_local
-        r_list.append(feasible_lantency)
-        # print("保底时延：",feasible_lantency)
-
         # 先补全每个决策变量 m
         for j in range(len(m_list)):
             for index in local_list:
@@ -353,6 +321,41 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2.0,me
             # print("补全后的m：", m_list[j])
 
         # *对补全后的设备进行分组
+        def split_group_latency(m):
+            up_devices = []
+            local_lantency = 0
+            for i in range(len(m)):  # 先对所有设备进行筛选，m[i]=0的直接计算本地时延之和，m[i]=1的运用sic进行分组
+                q_temp = 0
+                if m[i] == 1:  # 边缘执行
+                    up_devices.append(wireless_devices[i])
+                else:  # 本地执行
+                    if D_i_list[i] != 0:  # 上个时间帧没有执行完的设备
+                        # q_temp = flagWD[i]
+                        q_temp = D_i_list[i] * g_i[i] / f_i[i]
+                    # print("每个设备的q_temp:",q_temp)
+                    local_lantency += q_temp
+            # split_list = sic(devices_all=up_devices, server=server, alpha=alpha, N0=N_0, beta=beta)
+            split_list = sic_h(devices_all=up_devices, server=server, N0=N_0, beta=beta)
+            # print('分组情况:',split_list)
+
+            up_lantency = 0
+            for lst in split_list:  # [[1,2,3],[4,6],[7]]
+                up_time = 0  # 每个分组中最大的上传时延
+                for id in lst:  # [1,2,3]
+                    up_time_temp = 0
+                    if D_i_list[id] != 0:
+                        up_time_temp = uploadrecord_ori[id]
+                    up_time = max(up_time, up_time_temp)
+                up_lantency += up_time  # 所有的组的最大的上传时延之和
+
+            return up_lantency, local_lantency
+
+        # * 计算最大奖励
+        r_list = []  # 记录时延---保底可行解和满足可行性分析的解
+        feasible_up, feasible_local = split_group_latency(feasible_decision)
+        feasible_lantency = feasible_up + feasible_local
+        r_list.append(feasible_lantency)
+        # print("保底时延：",feasible_lantency)
 
 
         # * 可行性分析
@@ -430,7 +433,7 @@ def EAOO_latest(N_, n_, E_min_, P_, E_i_, D_i_list_, f_i_, g_i_, B_=5, T_=2.0,me
                 E_i[index] -= C_up_E
 
         # encode the mode with largest reward
-        mem.encode(h_scaled, E_i_scaled, D_i_scaled, optimal_m)  # *w
+        mem.encode(h, E_i, D_i_list, optimal_m)  # *w
         # the main code for DROO training ends here
 
         # the following codes store some interested metrics for illustrations

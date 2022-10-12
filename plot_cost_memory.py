@@ -17,7 +17,7 @@ def plot_cost_EAOOSIC(memory, color):
     import matplotlib.pyplot as plt
     for i in range(len(memory)):
         #EAOOSIC_cost = load_data('cost_EAOOSIC_' + str(memory[i]) + '.txt')
-        EAOOSIC_cost = sio.loadmat('./memory/cost_EAOOSIC_%d' % memory[i])['memory_cost_list']
+        EAOOSIC_cost = sio.loadmat('./memory/latency_EAOOSIC_%d' % memory[i])['memory_latency_list']
         EAOOSIC_cost = EAOOSIC_cost[0, :].tolist()
         plt.plot(np.arange(len(EAOOSIC_cost)) * 10, EAOOSIC_cost, color=color[i], label= 'Memory size = '+ str(memory[i]))
     plt.ylabel('EAOOSIC Training Loss')

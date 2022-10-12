@@ -2,7 +2,7 @@ import random
 import time
 from typing import List, Any
 import matplotlib.pyplot as plt
-from generate_h import *
+# from generate_h import *
 
 class WirelessDevice:
     def __init__(self, x, y, r, number=-1) -> None:
@@ -35,6 +35,8 @@ def create_wireless_device(n: int, max_location_x: float, max_location_y: float,
         temp_x = random.uniform(0, max_location_x)
         temp_y = random.uniform(0, max_location_y)
         temp_r = random.uniform(min_r, max_r)
+        #每个策略选出一个服务器位置，判断是否满足传输范围条件
+        #贪婪：三个交叉点&中心点的并发度最大值
         for device in wireless_devices:
             if (device.x - temp_x) ** 2 + (device.y - temp_y) ** 2 >= (device.r + temp_r - min_distance) ** 2:
                 break
@@ -71,7 +73,7 @@ def sic(devices_all: list, server: Server, alpha: float, N0: float, beta: float)
                 record_temp[i] = True
             else:
                 temp.append(devices_with_power[i])
-                if sic_help(devices_with_power=temp, alpha=alpha, N0=N0, beta=beta):
+                if sic_help(devices_with_power=temp,N0=N0, beta=beta):
                     record_temp[i] = True
                 else:
                     temp.pop()
@@ -94,7 +96,7 @@ def sic(devices_all: list, server: Server, alpha: float, N0: float, beta: float)
 
 
 # 判断在当前无线设备组下是否能够解码（当前无限设备组的p/d^alpha已经排序）
-def sic_help(devices_with_power: list, alpha: float, N0: float, beta: float) -> bool:
+def sic_help(devices_with_power: list,  N0: float, beta: float) -> bool:
     # 获得总共p/d^alpha之和
     total_power = 0
     for x in devices_with_power:
@@ -128,11 +130,11 @@ def get_all_w(n: int) -> list:
     get_all_w_helper([])
     return res
 
-def sic_h(devices_all: list, server: Server, alpha: float, N0: float, beta: float) -> List[List[Any]]:
+def sic_h(devices_all: list, server: Server, N0: float, beta: float) -> List[List[Any]]:
     #h_mean
-    A_d = 4.11
-    d_e = 2.8
-    f_c = 915e6
+    A_d = 4.11  #天线增益
+    d_e = 2.8  #路径损失指数
+    f_c = 915e6  #载波频率
     h_mean_list = []
 
     # devices_with_power用于保存p * h
@@ -163,7 +165,7 @@ def sic_h(devices_all: list, server: Server, alpha: float, N0: float, beta: floa
                 record_temp[i] = True
             else:
                 temp.append(devices_with_power[i])
-                if sic_help(devices_with_power=temp, alpha=alpha, N0=N0, beta=beta):
+                if sic_help(devices_with_power=temp,  N0=N0, beta=beta):
                     record_temp[i] = True
                 else:
                     temp.pop()
@@ -210,17 +212,17 @@ if __name__ == "__main__":
     plt.show()
     start_time = time.time()
     split_list = sic(devices_all=wireless_devices, server=server, alpha=alpha, N0=N0, beta=beta)
-    split_list_h = sic_h(devices_all=wireless_devices, server=server, alpha=alpha, N0=N0, beta=beta)
+    split_list_h = sic_h(devices_all=wireless_devices, server=server, N0=N0, beta=beta)
 
     print("sic分组情况是：", split_list)
     print("sic_h分组情况是：", split_list_h)
     # print("最大并发度为：", res)
     end_time = time.time()
-    print("总时间为：", end_time - start_time)
+    # print("总时间为：", end_time - start_time)
 
-    h_mean_list = cal_mean_h(devices_all=wireless_devices, server=server)
-    print('h_i:',h_mean_list)
+    # h_mean_list = cal_mean_h(devices_all=wireless_devices, server=server)
+    # print('h_i:',h_mean_list)
     #h_mean = [2.09586234e-06, 2.78914438e-06, 3.25940045e-06, 2.66778002e-06, 2.05608874e-06, 2.32011316e-06, 2.19657710e-06, 2.47194857e-06, 2.75105669e-06, 2.10990325e-06]
 
-    h_list = generate_h(h_mean_list)
+    # h_list = generate_h(h_mean_list)
     # print('h:',h_list)

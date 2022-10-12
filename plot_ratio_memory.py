@@ -14,12 +14,12 @@ def load_data(file_name):
     # print(time_list)
     return time_list
 
-def plot_cost_EAOOSIC(memory, color):
+def plot_ratio_EAOOSIC(memory, color):
     import matplotlib.pyplot as plt
-    rolling_intv = 80
+    rolling_intv = 70
     for i in range(len(memory)):
         #EAOOSIC_cost = load_data('cost_EAOOSIC_' + str(memory[i]) + '.txt')
-        EAOOSIC_ratio = sio.loadmat('./rt/memory_EAOOSIC_%d' % memory[i])['ratio_memory_list']
+        EAOOSIC_ratio = sio.loadmat('./ratio/memory_EAOOSIC_%d' % memory[i])['ratio_memory_list']
         EAOOSIC_ratio = EAOOSIC_ratio[0, :].tolist()
 
         ratio_array = np.asarray(EAOOSIC_ratio)
@@ -54,6 +54,6 @@ def plot_cost_EAOOSIC(memory, color):
     plt.show()
 
 if __name__ == '__main__':
-    memory = [64,128,256, 512]
+    memory = [64,128, 256, 512, 1024]
     color = ['lightseagreen', 'cornflowerblue', 'darkorchid', 'midnightblue', 'cadetblue']
-    plot_cost_EAOOSIC(memory, color)
+    plot_ratio_EAOOSIC(memory, color)
